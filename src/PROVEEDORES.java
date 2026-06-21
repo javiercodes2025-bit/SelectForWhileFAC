@@ -151,6 +151,10 @@ public class PROVEEDORES  extends conectarCls {
         modBTN.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+
+                conecV();
+                BDD = getCon();
+
                 int fila = table1.getSelectedRow();
 
                 System.out.println("Filas modificadas: " + fila);
@@ -198,6 +202,9 @@ public class PROVEEDORES  extends conectarCls {
         eliBTN.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                conecV();
+                BDD = getCon();
+
                 int fila = table1.getSelectedRow();
                 if (fila == -1) {
                     JOptionPane.showMessageDialog(null,

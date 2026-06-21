@@ -85,8 +85,8 @@ public class STOCK extends conectarCls {
         selectBTN.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                conecV();
-                BDD = getCon();
+//                conecV();
+//                BDD = getCon();
 
 
                 int fila= table1.getSelectedRow();
@@ -122,11 +122,11 @@ public class STOCK extends conectarCls {
                             "Termine de modificar...");
                     return;
                 }
-//                if (fila == -1) {
-//                    JOptionPane.showMessageDialog(null,
-//                            "Seleccione un cliente...");
-//                    return;
-//                }
+                int desc = Integer.parseInt(decuXTF.getText());
+                if (desc < 0 || desc > 100) {
+                    JOptionPane.showMessageDialog(null, "El descuento debe estar entre 0 y 100");
+                    return;
+                }
                 String SQLinsert = "{CALL registrarPelicula(?,?,?,?,?,?)}";
 
                 try {
@@ -137,6 +137,7 @@ public class STOCK extends conectarCls {
                     sqlSelect.setInt(2, Integer.parseInt(anioTF.getText()));
                     sqlSelect.setInt(3, Integer.parseInt(duracTF.getText()));
                     sqlSelect.setDouble(4, Double.parseDouble(precioTF.getText()));
+
                     sqlSelect.setInt(5, Integer.parseInt(decuXTF.getText())); // descuento producto
                     sqlSelect.setInt(6, Integer.parseInt(canTF.getText()));   // cantidad
                     sqlSelect.execute();

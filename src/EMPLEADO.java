@@ -35,7 +35,6 @@ public class EMPLEADO extends conectarCls {
     Connection BDD;
     PreparedStatement sql1;
 
-
     DefaultTableModel tj = new DefaultTableModel();
 
     public void  cargarTable(){
@@ -172,20 +171,20 @@ public class EMPLEADO extends conectarCls {
                 conecV();
                 BDD = getCon();
 
+                int fila = table1.getSelectedRow();
 
                 String SQLinsert = "{CALL registrarEmpleado(?,?,?,?,?,?)}";
 
                 try {
-                    int fila = table1.getSelectedRow();
 
                     if (fila == -1) {
                         JOptionPane.showMessageDialog(null,
-                                "Seleccione una persona(Para completar su rol)");
+                                "Elegí una empleado para completarlo...");
                         return;
                     }
                     int fkPersona = Integer.parseInt(table1.getValueAt(fila, 0).toString()
                     );
-                    sql1 = BDD.prepareStatement(SQLinsert);
+                    sql1 = BDD.prepareCall(SQLinsert);
                     /*La columna 0 contiene id_persona(Select) para tu fk_persona*/
 
 
@@ -193,13 +192,14 @@ public class EMPLEADO extends conectarCls {
 
                     sql1.setString(2, hEnTF.getText());
                     sql1.setString(3, hsaTF.getText());
+
                     sql1.setInt(4, Integer.parseInt(sueldoTF.getText()));
                     sql1.setString(5, numdTF.getText());
                     sql1.setString(6, TipoComBox.getSelectedItem().toString());
 
-                    if (table1.getValueAt(fila, 2) != null ||
-                            table1.getValueAt(fila, 3) != null ||
-                            table1.getValueAt(fila, 4) != null) {
+                    if (table1.getValueAt(fila, 7) != null ||
+                            table1.getValueAt(fila, 8) != null ||
+                            table1.getValueAt(fila, 9) != null) {
 
                         JOptionPane.showMessageDialog(
                                 null,
@@ -220,6 +220,7 @@ public class EMPLEADO extends conectarCls {
                     TipoComBox.setSelectedIndex(0);
 
                 } catch (SQLException ex) {
+
                     ex.printStackTrace();
                 }
 
@@ -230,6 +231,9 @@ public class EMPLEADO extends conectarCls {
         eliBTN.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                conecV();
+                BDD = getCon();
+
                 int fila = table1.getSelectedRow();
 
                 if (fila == -1) {
@@ -263,6 +267,10 @@ public class EMPLEADO extends conectarCls {
         modBTN.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                conecV();
+                BDD = getCon();
+
+
                 int fila = table1.getSelectedRow();
                 System.out.println("Filas modificadas: " + fila);
 
@@ -275,9 +283,26 @@ public class EMPLEADO extends conectarCls {
                         table1.getValueAt(fila, 0 ).toString()
                 );
                 String SQLupdat = "{CALL actualizarEmpleado(?,?,?,?,?,?)}";
+
+
+                if (sueldoTF.getText().trim().isEmpty() ||
+                        hEnTF.getText().trim().isEmpty() ||
+                        hsaTF.getText().trim().isEmpty() ||
+                        numdTF.getText().trim().isEmpty()) {
+                    JOptionPane.showMessageDialog(null, "Complete todos los campos...");
+                    return;
+                }
+                if(TipoComBox.getSelectedIndex() == 0){
+                    JOptionPane.showMessageDialog(
+                            null,
+                            "Seleccione un Tipo..."
+                    );
+                    return;
+                }
+
                 try {
 
-                    sql1 = BDD.prepareStatement(SQLupdat);
+                    sql1 = BDD.prepareCall(SQLupdat);
 
 
                     sql1.setInt(1, idEmpl);
@@ -286,13 +311,7 @@ public class EMPLEADO extends conectarCls {
 
                     sql1.setInt(4, Integer.parseInt(sueldoTF.getText()));
                     sql1.setString(5, numdTF.getText());
-                    if(TipoComBox.getSelectedIndex() == 0){
-                        JOptionPane.showMessageDialog(
-                                null,
-                                "Seleccione un Tipo..."
-                        );
-                        return;
-                    }
+
                     sql1.setString(6, TipoComBox.getSelectedItem().toString());
                     sql1.executeUpdate();
                     cargarTable();

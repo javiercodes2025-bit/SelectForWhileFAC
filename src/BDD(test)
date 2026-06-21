@@ -185,7 +185,6 @@ CREATE TABLE stock (
             REFERENCES proveedor(id_proveedor)
 );
 
-/*FALTA...........*/
 
 
 -- VENTA
