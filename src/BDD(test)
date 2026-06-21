@@ -138,6 +138,7 @@ CREATE TABLE empleadosXdocumento(
 CREATE TABLE cliente (
     id_cliente INT PRIMARY KEY AUTO_INCREMENT,
     fk_persona INT UNIQUE NOT NULL,
+     dni INT UNIQUE ,
 
     FOREIGN KEY (fk_persona)
         REFERENCES persona(id_persona)

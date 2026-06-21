@@ -46,11 +46,7 @@ public class FACTURACION extends conectarCls{
         facDTJ.setColumnCount(0);
 
         String sqlSelect =
-                "SELECT v.id_venta, v.cuenta, " +
-                        "v.NombrePro, " +
-                        "v.metodo_pago, " +
-                        "pxv.cantidad, " +
-                        "pxv.DescuentoXproducto, " +
+                "SELECT v.id_venta, v.cuenta, v.NombrePro,  v.metodo_pago, pxv.cantidad, pxv.DescuentoXproducto, " +
 
                         "v.descuento, " +
                         "v.subtotal, " +

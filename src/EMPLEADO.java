@@ -126,7 +126,7 @@ public class EMPLEADO extends conectarCls {
                 int fila= table1.getSelectedRow();
                 if (fila == -1) {
                     JOptionPane.showMessageDialog(null,
-                            "Seleccione una persona de la tabla");
+                            "Seleccione un empleado en la tabla..");
                     return;
                 }
 

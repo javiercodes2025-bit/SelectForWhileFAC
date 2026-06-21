@@ -26,6 +26,7 @@ public class CLIENTES extends conectarCls{
     private JTextField calleTF;
     private JTextField ciudadTF;
     private JComboBox rolComBox;
+    private JTextField dniTF;
 
     Connection BDD;
     ResultSet rs = null;
@@ -43,6 +44,7 @@ public class CLIENTES extends conectarCls{
         String sqlSelect =
                 "SELECT p.id_persona, p.nombre, p.apellido, " +
                         "t.numero, e.correo, p.password, p.rol, " +
+                        "c.dni, " +
                         "d.calle, d.numero, d.ciudad " +
                         "FROM persona p " +
                         "INNER JOIN cliente c ON p.id_persona = c.fk_persona " +
@@ -68,6 +70,7 @@ public class CLIENTES extends conectarCls{
             CliDefTable.addColumn("GMAIL");
             CliDefTable.addColumn("PASSWORD");
             CliDefTable.addColumn("ROL");
+            CliDefTable.addColumn("DNI");
             CliDefTable.addColumn("CALLE");
             CliDefTable.addColumn("NUMERO");
             CliDefTable.addColumn("CIUDAD");
@@ -112,6 +115,7 @@ public class CLIENTES extends conectarCls{
                         || calleTF.getText().trim().isEmpty()
                         || numcalleTF.getText().trim().isEmpty()
                         || ciudadTF.getText().trim().isEmpty()
+                        || dniTF.getText().trim().isEmpty()
                         || rolComBox.getSelectedItem() == null) {
 
                     JOptionPane.showMessageDialog(
@@ -123,7 +127,7 @@ public class CLIENTES extends conectarCls{
 
 
                 /*Se puede hacerlo asi... si te complica.*/
-                String sqlInsert = "{CALL registrarCliente(?,?,?,?,?,?,?,?,?)}";
+                String sqlInsert = "{CALL registrarCliente(?,?,?,?,?,?,?,?,?,?)}";
                 try {
 
 
@@ -131,14 +135,15 @@ public class CLIENTES extends conectarCls{
 
                     sql1.setString(1, nomTF.getText());
                     sql1.setString(2, apeTF.getText());
-                    sql1.setString(3, telTF.getText());
-                    sql1.setString(4, gmailTF.getText());
-                    sql1.setString(5, passTF.getText());
-                    sql1.setString(6,rolComBox.getSelectedItem().toString());
+                    sql1.setString(3, passTF.getText());
+                    sql1.setString(4, rolComBox.getSelectedItem().toString());
+                    sql1.setString(5, telTF.getText());
+                    sql1.setString(6, gmailTF.getText());
 
                     sql1.setString(7, calleTF.getText());
                     sql1.setString(8, numcalleTF.getText());
                     sql1.setString(9, ciudadTF.getText());
+                    sql1.setString(10, dniTF.getText());
 
                     sql1.execute();
 
@@ -150,7 +155,12 @@ public class CLIENTES extends conectarCls{
                     cargarTable();
 
                 } catch (SQLException ex) {
-                    ex.printStackTrace();
+                    if (ex.getErrorCode() == 1062) {  //Para duplicate entry
+                        JOptionPane.showMessageDialog(null, "El DNI ya existe en la BDD");
+                    } else {
+                        ex.printStackTrace();
+                    }
+//                    ex.printStackTrace();
                 }
 
 
@@ -170,17 +180,42 @@ public class CLIENTES extends conectarCls{
                     return;
                 }
 
-
                 String id = table1.getValueAt(fila, 0).toString();
                 String nom = table1.getValueAt(fila, 1).toString();
                 String ape = table1.getValueAt(fila, 2).toString();
-                String tel = table1.getValueAt(fila, 3).toString();
-                String gmail = table1.getValueAt(fila, 4).toString();
+
+                String tel = "";
+                if(table1.getValueAt(fila, 3) != null){
+                    tel = table1.getValueAt(fila, 3).toString();
+                }
+
+                String gmail = "";
+                if(table1.getValueAt(fila, 4) != null){
+                    gmail = table1.getValueAt(fila, 4).toString();
+                }
+
                 String pass = table1.getValueAt(fila, 5).toString();
-                 //rol 6
-                String calle = table1.getValueAt(fila, 7).toString();
-                String numCalle = table1.getValueAt(fila, 8).toString();
-                String ciudad = table1.getValueAt(fila, 9).toString();
+                //rol 6
+
+                String dni = "";
+                if(table1.getValueAt(fila, 7) != null){
+                    dni = table1.getValueAt(fila, 7).toString();
+                }
+
+                String calle = "";
+                if(table1.getValueAt(fila, 8) != null){
+                    calle = table1.getValueAt(fila, 8).toString();
+                }
+
+                String numCalle = "";
+                if(table1.getValueAt(fila, 9) != null){
+                    numCalle = table1.getValueAt(fila, 9).toString();
+                }
+
+                String ciudad = "";
+                if(table1.getValueAt(fila, 10) != null){
+                    ciudad = table1.getValueAt(fila, 10).toString();
+                }
 
                 idTF.setText(id);
                 nomTF.setText(nom);
@@ -189,6 +224,7 @@ public class CLIENTES extends conectarCls{
                 gmailTF.setText(gmail);
                 passTF.setText(pass);
 
+                dniTF.setText(dni);
                 calleTF.setText(calle);
                 numcalleTF.setText(numCalle);
                 ciudadTF.setText(ciudad);
@@ -210,22 +246,20 @@ public class CLIENTES extends conectarCls{
                 int idClie = Integer.parseInt(
                         table1.getValueAt(fila, 0 ).toString()
                 );
-                String SQLmodi = "{CALL modificarCliente(?,?,?,?,?,?,?,?,?,?)}";
+                String SQLmodi = "{CALL modificarCliente(?,?,?,?,?,?,?,?,?,?,?)}";
                 try {
                     sql1 = BDD.prepareCall(SQLmodi);
-                    sql1.setInt(1,idClie);
-//                    sql1.setInt(1, Integer.parseInt(idTF.getText()));
+                    sql1.setInt(1, idClie);
                     sql1.setString(2, nomTF.getText());
                     sql1.setString(3, apeTF.getText());
-                    sql1.setString(4, telTF.getText());
-                    sql1.setString(5, gmailTF.getText());
-                    sql1.setString(6, passTF.getText());
-
-                    sql1.setString(7, rolComBox.getSelectedItem().toString());
-
+                    sql1.setString(4, telTF.getText());      // p_telefono
+                    sql1.setString(5, gmailTF.getText());     // p_email
+                    sql1.setString(6, passTF.getText());      // p_password
+                    sql1.setString(7, rolComBox.getSelectedItem().toString()); // p_rol
                     sql1.setString(8, calleTF.getText());
                     sql1.setString(9, numcalleTF.getText());
                     sql1.setString(10, ciudadTF.getText());
+                    sql1.setString(11, dniTF.getText());
                     sql1.executeUpdate();
                     cargarTable();
 
@@ -242,6 +276,7 @@ public class CLIENTES extends conectarCls{
                     calleTF.setText("");
                     numcalleTF.setText("");
                     ciudadTF.setText("");
+                    dniTF.setText("");
 
                     idTF.setText("");
 
