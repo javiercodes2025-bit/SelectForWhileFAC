@@ -356,6 +356,7 @@ public class FACTURACION extends conectarCls{
                     stockTF.setText("");
                     preTF.setText("");
                     nomTF.setText("SINCUENTA");
+                    desXproTF.setText("0");
 
                     cargarTable();
                 } catch (Exception ex) {

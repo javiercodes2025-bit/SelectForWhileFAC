@@ -127,13 +127,11 @@ public class STOCK extends conectarCls {
                             "Termine de modificar...");
                     return;
                 }
-
 //                if (fila == -1) {
 //                    JOptionPane.showMessageDialog(null,
 //                            "Seleccione un cliente...");
 //                    return;
 //                }
-
                 String SQLinsert = "{CALL registrarPelicula(?,?,?,?,?,?)}";
 
                 try {
@@ -153,7 +151,7 @@ public class STOCK extends conectarCls {
                     duracTF.setText("");
                     precioTF.setText("");
                     canTF.setText("");
-                     decuXTF.setText("");
+                    decuXTF.setText("0");
 
                     cargarTable();
                 } catch (SQLException ex) {
@@ -186,14 +184,6 @@ public class STOCK extends conectarCls {
                 try {
                     sqlSelect = BDD.prepareStatement(SQLmodi);
 
-/*
-                       sqlSelect = BDD.prepareStatement(SQLinsert);
-/*
- private JTextField tituloTF;
-    private JTextField anioTF;
-    private JTextField duracTF;
-    private JTextField precioTF;
-    private JTextField canTF;*/
 
                     sqlSelect.setString(1,tituloTF.getText());
                     sqlSelect.setInt(2, Integer.parseInt(anioTF.getText()));
@@ -211,6 +201,7 @@ public class STOCK extends conectarCls {
                     precioTF.setText("");
                     canTF.setText("");
                     idpeliTF.setText("");
+                    decuXTF.setText("0");
 
                     // quitar la selección de la tabla...
                     table1.clearSelection();
@@ -246,6 +237,8 @@ public class STOCK extends conectarCls {
                     sqlSelect.executeUpdate();
                     cargarTable();
 
+                    // quitar la selección de la tabla...
+                    table1.clearSelection();
                 }catch (Exception  c){
                     System.out.println("Eliminar: Algo salio mal..."+c);
                     c.printStackTrace();
