@@ -31,6 +31,7 @@ public class FACTURACION extends conectarCls{
     private JTextField preTF;
     private JTextField nomTF;
     private JTextField desXproTF;
+    private JButton atrasBTN;
 
     Connection BDD;
     ResultSet rs = null;
@@ -533,6 +534,15 @@ public class FACTURACION extends conectarCls{
         });
 
 
+        atrasBTN.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                Login lg = new Login();
+                lg.setVisible(true);
+
+                javax.swing.SwingUtilities.getWindowAncestor(atrasBTN).dispose();
+            }
+        });
     }
 
     public void setVisible(boolean b){

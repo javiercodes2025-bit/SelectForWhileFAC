@@ -86,48 +86,6 @@ public class REGISTRO extends conectarCls  {
         }
 
 
-        /*
-public void seleccionar(){
-        ConnecV();
-        BDD = getCon();
-        jt.setRowCount(0);
-
-        String SQLPROD = "Select idAutor, nombre, nacionalidad  from autor where habi = 1";
-
-        try{
-            sql1= BDD.prepareStatement(SQLPROD);
-            rs = sql1.executeQuery();
-
-            ResultSetMetaData resul = rs.getMetaData();
-            int cantColums = resul.getColumnCount();
-
-
-            jt.addColumn("idAutor");
-            jt.addColumn("nombre");
-            jt.addColumn("nacionalidad");
-*/
-        /*
-            while(rs.next()) {
-                Object[] filas = new Object[cantColums];
-                for (int i= 0; i < cantColums; i++){
-                    filas[i] = rs.getObject(i + 1);
-                }
-                jt.addRow(filas);
-            }
-
-            //toma la fila 0... como el id.
-            table1.getColumnModel().getColumn(0).setMinWidth(0);
-            table1.getColumnModel().getColumn(0).setMaxWidth(0);
-            table1.getColumnModel().getColumn(0).setWidth(0);
-
-        }catch(SQLException c){
-
-            c.printStackTrace();
-        }
-
-    };
-*/
-
     }
     public REGISTRO() {
         table1.setModel(tj);
