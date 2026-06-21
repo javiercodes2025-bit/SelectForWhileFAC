@@ -1,0 +1,242 @@
+18/06..
+
+------------------ SistemaDePelículas ------------------
+CREATE DATABASE sistemadepeliculas;
+USE sistemadepeliculas;
+
+-- PERSONAS
+
+CREATE TABLE persona (
+    id_persona INT PRIMARY KEY AUTO_INCREMENT,
+    nombre VARCHAR(100) NOT NULL,
+    apellido VARCHAR(100) NOT NULL,
+    telefono VARCHAR(30) NOT NULL,
+    email VARCHAR(100) UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    habilitado INT DEFAULT 1,
+    rol VARCHAR(45) NOT NULL
+
+);
+
+CREATE TABLE cliente (
+    id_cliente INT PRIMARY KEY AUTO_INCREMENT,
+    fk_persona INT UNIQUE NOT NULL,
+
+    FOREIGN KEY (fk_persona)
+        REFERENCES persona(id_persona)
+);
+
+
+CREATE TABLE empleado (
+    id_empleado INT PRIMARY KEY AUTO_INCREMENT,
+    fk_persona INT UNIQUE NOT NULL,
+
+    hora_entrada VARCHAR(10),
+    hora_salida VARCHAR(10),
+    sueldo INT,
+
+    FOREIGN KEY (fk_persona)
+        REFERENCES persona(id_persona)
+);
+
+
+
+CREATE TABLE proveedor (
+    id_proveedor INT PRIMARY KEY AUTO_INCREMENT,
+
+    nombre VARCHAR(100) NOT NULL,
+    telefono VARCHAR(30),
+    email VARCHAR(100),
+    Domicilio VARCHAR(45),
+    habi INT DEFAULT 1
+);
+
+CREATE TABLE peliculaXproveedor (
+    id_peliculaXproveedor INT PRIMARY KEY AUTO_INCREMENT,
+
+    fk_pelicula INT,
+    fk_proveedor INT,
+
+    FOREIGN KEY (fk_pelicula)
+        REFERENCES pelicula(id_pelicula),
+
+    FOREIGN KEY (fk_proveedor)
+        REFERENCES proveedor(id_proveedor)
+);
+
+-- PELICULA
+
+CREATE TABLE pelicula (
+    id_pelicula INT PRIMARY KEY AUTO_INCREMENT,
+    titulo VARCHAR(150) NOT NULL,
+    anio INT,
+    duracion INT,
+    precio DECIMAL(10,2),
+
+    habi INT DEFAULT 1
+);
+
+
+------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------
+
+-- STOCK
+
+CREATE TABLE stock (
+    id_stock INT PRIMARY KEY AUTO_INCREMENT,
+    fk_pelicula INT UNIQUE,
+    cantidad INT DEFAULT 0,
+
+    FOREIGN KEY (fk_pelicula)
+        REFERENCES pelicula(id_pelicula)
+);
+
+
+-- VENTA
+CREATE TABLE venta (
+    id_venta INT PRIMARY KEY AUTO_INCREMENT,
+
+    fk_cliente INT,
+    fk_empleado INT,
+      cuenta VARCHAR(30) DEFAULT 'SINCUENTA',
+    fecha_venta DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+    metodo_pago VARCHAR(30),
+
+    subtotal DECIMAL(10,2),
+    descuento DECIMAL(10,2) DEFAULT 0,
+    total DECIMAL(10,2),
+
+    habi INT DEFAULT 1,
+    NombrePro VARCHAR(30),
+
+    FOREIGN KEY (fk_cliente)
+        REFERENCES cliente(id_cliente),
+
+    FOREIGN KEY (fk_empleado)
+        REFERENCES empleado(id_empleado)
+);
+
+-- PELICULAXVENTA
+CREATE TABLE peliculaXventa (
+    id_peliculaXventa INT PRIMARY KEY AUTO_INCREMENT,
+
+    fk_venta INT,
+    fk_pelicula INT,
+
+    cantidad INT NOT NULL,
+
+    habi INT DEFAULT 1,
+
+    FOREIGN KEY (fk_venta)
+        REFERENCES venta(id_venta),
+
+    FOREIGN KEY (fk_pelicula)
+        REFERENCES pelicula(id_pelicula)
+);
+
+
+------------------------------------------------------------------------------------------------
+INSERT INTO venta
+(fk_cliente, fk_empleado, metodo_pago, subtotal, descuento, total)
+VALUES
+(1, 1, 'Efectivo', 30000, 0, 30000),
+(2, 1, 'Debito',   45000, 5000, 40000),
+(3, 2, 'Credito',  60000, 0, 60000),
+(4, 2, 'Transferencia', 25000, 2500, 22500),
+(5, 3, 'Efectivo', 70000, 10000, 60000);
+
+INSERT INTO peliculaXventa
+(fk_venta, fk_pelicula, cantidad, precio_unitario)
+VALUES
+(1, 1, 2, 15000),
+(2, 2, 2, 18000),
+(3, 5, 3, 18000),
+(4, 4, 1, 14000),
+(5, 8, 3, 22000);
+
+------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------
+INSERT :
+
+  -- PERSONAS
+  INSERT INTO persona (nombre, apellido, telefono, email, password, rol, habilitado)
+  VALUES
+  ('Juan', 'Perez', '2235551111', 'juan@gmail.com', '1234', 'CLIENTE', 1),
+  ('Maria', 'Gomez', '2235552222', 'maria@gmail.com', '1234', 'CLIENTE', 1),
+  ('Carlos', 'Lopez', '2235553333', 'carlos@gmail.com', '1234', 'CLIENTE', 1),
+  ('Ana', 'Martinez', '2235554444', 'ana@gmail.com', '1234', 'EMPLEADO', 1),
+  ('Luis', 'Fernandez', '2235555555', 'luis@gmail.com', '1234', 'EMPLEADO', 1),
+  ('Pedro', 'Rodriguez', '2235556666', 'pedro@gmail.com', '1234', 'ADMINISTRADOR', 1);
+
+  -- CLIENTES
+  -- (Juan, Maria y Carlos)
+  INSERT INTO cliente (fk_persona)
+  VALUES
+  (1),
+  (2),
+  (3);
+
+  -- EMPLEADOS
+  -- (Ana, Luis y Pedro)
+  INSERT INTO empleado (fk_persona, hora_entrada, hora_salida, sueldo)
+  VALUES
+  (4, '08:00', '16:00', 850000),
+  (5, '14:00', '22:00', 900000),
+  (6, '09:00', '17:00', 1200000);
+
+------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------
+INSERT INTO pelicula (titulo, anio, duracion, precio)
+VALUES
+('Matrix', 1999, 136, 15000.00),
+('Avatar', 2009, 162, 18000.00),
+('Titanic', 1997, 194, 12000.00),
+('John Wick', 2014, 101, 14000.00),
+('Interestelar', 2014, 169, 20000.00);
+
+
+INSERT INTO stock (fk_pelicula, cantidad)
+VALUES
+(1, 20),
+(2, 15),
+(3, 10),
+(4, 25),
+(5, 8);
+------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------
+INSERT INTO proveedor(nombre, telefono, email, Domicilio) VALUES
+('CineDistrib', '2235551111', 'ventas@cinedistrib.com', 'Av. Independencia 1200'),
+('Warner Argentina', '2235552222', 'contacto@warner.com', 'Av. Colón 2450'),
+('Fox Home Video', '2235553333', 'info@fox.com', 'San Martín 3200'),
+('Universal Films', '2235554444', 'ventas@universal.com', 'Av. Luro 1850'),
+('Paramount Pictures', '2235555555', 'paramount@paramount.com', 'Belgrano 4100'),
+('Sony Pictures', '2235556666', 'sony@sony.com', 'Av. Jara 950'),
+('DreamWorks Distribucion', '2235557777', 'dreamworks@dream.com', 'Juan B. Justo 2700'),
+('Movie Center', '2235558888', 'contacto@moviecenter.com', 'Av. Constitución 5200');
+
+
+INSERT INTO peliculaXproveedor(fk_pelicula, fk_proveedor) VALUES
+(1,1), -- Matrix
+(2,2), -- Avatar
+(3,3), -- Titanic
+(4,4), -- John Wick
+(5,5), -- Interestelar
+(6,6), -- Avatar 2
+(7,7), -- John Wick 2
+(8,8); -- John Wick 3
+------------------------------------------------------------------------------------------------
+SELECT:
+SELECT
+p.id_pelicula,
+p.titulo,
+p.anio,
+p.precio,
+s.cantidad
+FROM pelicula p
+INNER JOIN stock s
+ON p.id_pelicula = s.fk_pelicula;
+------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------

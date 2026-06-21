@@ -1,0 +1,106 @@
+19/06...
+Clientes: select, Registrar(Pero con xd procedure... ), modificar, elimimar(Deshabilitar )   ....
+( logicaMySQL tablas)
+
+Empleados: select, Registra(Con datos ya ingresados.. De registro),
+SELECTOR, modificar(Al usar SELECTOR, no te deja modificar xd), elimimar(Deshabilitar ), ....
+(logicaMySQL tablas,
+ te faltaria de usar...  venta: fk_cliente INT,
+                                fk_empleado INT )
+
+
+
+Stock: Select, Registrar, modificar, eliminar
+(   logicaMySQL tablas... Registrar:no tiene: Que  no se duplique)
+
+
+Registro: select, Registrar,  ....
+( elimimar(Deshabilitar)?, logicaMySQL tablas, TF: NO VALIDA NULL )
+
+
+Proveedores: Select, eliminar, Registrar,modificar
+( logicaMySQL tablas..(Yy la otra tabla??peliculaXproveedor ))
+
+
+IniciarSecion:para admins, empleados...
+
+(Verificacion... un select a un dato...
+ Existe?? hacé esto EMPLEADO EMP = new EMPLEADO();       EMP.setVisible(true); )
+ falta: distintas vistas: login...
+
+Facturacion: (logica: calcular%, CodigoBarra, metCbox..) select, Registrar(cuenta.. nombreP, SINCUENTA)
+, eliminar, Stock: con su update.., Modificar...
+ ( logicaMySQL tablas, fk_ null de ventas..)
+
+tips... PROCEDURE(viejo)  registrarVenta, modificarVenta... registrarCliente
+
+nuevoEmpleados(ANDA)(
+ ...falta: if de horarios)..
+(logicaMySQL tablas)
+LISTO:
+-- DOCUMENTO
+CREATE TABLE documento(
+CREATE TABLE empleadosXdocumento(
+..........................................
+
+nuevoRegistro(ANDA):
+(logicaMySQL tablas)
+-- DIRECCION
+CREATE TABLE direccion(
+CREATE TABLE personaXdireccion(
+....................................................................................
+-- TELEFONOS
+CREATE TABLE telefonos(
+CREATE TABLE personaXtelefonos(
+....................................................................................
+-- EMAIL
+CREATE TABLE email(
+CREATE TABLE personaXemail(
+....................................................................................
+....................................................................................
+
+
+nuevoClientes(anda): ?
+
+-- PERSONA
+CREATE TABLE persona (
+    (sin usar xc)
+    fk_perXtel INT,
+    fk_perXemail INT,
+    fk_perXdire INT
+-- EMAIL
+CREATE TABLE email(
+CREATE TABLE personaXemail(
+-- TELEFONOS
+CREATE TABLE telefonos(
+CREATE TABLE personaXtelefonos(
+-- DIRECCION
+CREATE TABLE direccion(
+CREATE TABLE personaXdireccion(
+CREATE TABLE cliente (
+
+
+nuevoProveedor: (anda) sin usar fk_
+
+CREATE TABLE proveedor (
+
+
+nuevoStock( anda...)sin usar fk_ + , no Modificar:
+dato: en id pone xd codigo de barra de  titulo...
+
+-- PELICULA
+CREATE TABLE pelicula (
+    id_pelicula INT PRIMARY KEY AUTO_INCREMENT
+-- STOCK
+CREATE TABLE stock (
+   id_stock INT PRIMARY KEY AUTO_INCREMENT,
+   fk_pelicula INT,
+   fk_proveedor INT,
+
+
+nuevoFacuracion: (anda) falta modificar
+
+
+
+
+

@@ -1,0 +1,231 @@
+19/06..
+/*
+Actualiza al formato q quiere el profe...
+*/
+
+-- FOREIGN KEYS Desde Persona...
+ALTER TABLE persona
+ADD CONSTRAINT fk_persona_tel
+FOREIGN KEY (fk_perXtel)
+REFERENCES personaXtelefonos(id_perXtel);
+
+ALTER TABLE persona
+ADD CONSTRAINT fk_persona_email
+FOREIGN KEY (fk_perXemail)
+REFERENCES personaXemail(id_perXemail);
+
+
+ALTER TABLE persona
+ADD CONSTRAINT fk_persona_dire
+FOREIGN KEY (fk_perXdire)
+REFERENCES personaXdireccion(id_perXdire);
+
+------------------ SistemaDePelículas ------------------
+CREATE DATABASE sistemadepeliculas;
+USE sistemadepeliculas;
+
+-- PERSONA
+CREATE TABLE persona (
+    id_persona INT PRIMARY KEY AUTO_INCREMENT,
+    nombre VARCHAR(100) NOT NULL,
+    apellido VARCHAR(100) NOT NULL,
+
+    password VARCHAR(255) NOT NULL,
+    habilitado INT DEFAULT 1,
+    rol VARCHAR(45) NOT NULL,
+
+    fk_perXtel INT,
+    fk_perXemail INT,
+
+    fk_perXdire INT
+);
+
+
+
+-- EMAIL
+CREATE TABLE email(
+    id_email INT PRIMARY KEY AUTO_INCREMENT,
+    correo VARCHAR(100) NOT NULL,
+    habilitado INT DEFAULT 1
+);
+
+CREATE TABLE personaXemail(
+    id_perXemail INT PRIMARY KEY AUTO_INCREMENT,
+    fk_persona INT,
+    fk_email INT,
+
+    FOREIGN KEY (fk_persona)
+        REFERENCES persona(id_persona),
+
+    FOREIGN KEY (fk_email)
+        REFERENCES email(id_email)
+);
+
+-- TELEFONOS
+CREATE TABLE telefonos(
+    id_telefono INT PRIMARY KEY AUTO_INCREMENT,
+    numero VARCHAR(30) NOT NULL,
+    habilitado INT DEFAULT 1
+);
+
+CREATE TABLE personaXtelefonos(
+    id_perXtel INT PRIMARY KEY AUTO_INCREMENT,
+    fk_persona INT,
+    fk_telefono INT,
+
+    FOREIGN KEY (fk_persona)
+        REFERENCES persona(id_persona),
+
+    FOREIGN KEY (fk_telefono)
+        REFERENCES telefonos(id_telefono)
+);
+
+-- DIRECCION
+CREATE TABLE direccion(
+    id_direccion INT PRIMARY KEY AUTO_INCREMENT,
+    calle VARCHAR(100),
+    numero VARCHAR(20),
+    ciudad VARCHAR(100),
+
+    habilitado INT DEFAULT 1
+);
+
+CREATE TABLE personaXdireccion(
+    id_perXdire INT PRIMARY KEY AUTO_INCREMENT,
+    fk_persona INT,
+    fk_direccion INT,
+
+    FOREIGN KEY (fk_persona)
+        REFERENCES persona(id_persona),
+
+    FOREIGN KEY (fk_direccion)
+        REFERENCES direccion(id_direccion)
+);
+
+
+CREATE TABLE empleado (
+    id_empleado INT PRIMARY KEY AUTO_INCREMENT,
+    fk_persona INT UNIQUE NOT NULL,
+
+    hora_entrada VARCHAR(10),
+    hora_salida VARCHAR(10),
+    sueldo INT,
+
+    FOREIGN KEY (fk_persona)
+        REFERENCES persona(id_persona)
+);
+
+-- DOCUMENTO
+CREATE TABLE documento(
+    id_documento INT PRIMARY KEY AUTO_INCREMENT,
+    numero_documento VARCHAR(20) UNIQUE NOT NULL,
+    tipo VARCHAR(25) NOT NULL,
+    habilitado INT DEFAULT 1
+);
+
+CREATE TABLE empleadosXdocumento(
+    id_emplXdocu INT PRIMARY KEY AUTO_INCREMENT,
+    fk_empleado INT,
+    fk_documento INT,
+
+    FOREIGN KEY (fk_empleado)
+        REFERENCES empleado(id_empleado),
+
+    FOREIGN KEY (fk_documento)
+        REFERENCES documento(id_documento)
+);
+
+CREATE TABLE cliente (
+    id_cliente INT PRIMARY KEY AUTO_INCREMENT,
+    fk_persona INT UNIQUE NOT NULL,
+
+    FOREIGN KEY (fk_persona)
+        REFERENCES persona(id_persona)
+);
+
+----------------------------------------------------------
+----------------------------------------------------------
+
+
+
+CREATE TABLE proveedor (
+    id_proveedor INT PRIMARY KEY AUTO_INCREMENT,
+
+    nombre VARCHAR(100) NOT NULL,
+    telefono VARCHAR(30),
+    email VARCHAR(100),
+    Domicilio VARCHAR(45),
+    habi INT DEFAULT 1
+);
+
+
+
+-- PELICULA
+CREATE TABLE pelicula (
+    id_pelicula INT PRIMARY KEY AUTO_INCREMENT,
+    titulo VARCHAR(150) NOT NULL,
+    anio INT,
+    duracion INT,
+    precio DECIMAL(10,2),
+    desc_x_produc INT DEFAULT 0,
+    habi INT DEFAULT 1
+);
+
+-- STOCK
+CREATE TABLE stock (
+   id_stock INT PRIMARY KEY AUTO_INCREMENT,
+   fk_pelicula INT,
+   fk_proveedor INT,
+   cantidad INT DEFAULT 0,
+
+   FOREIGN KEY (fk_pelicula)
+            REFERENCES pelicula(id_pelicula),
+   FOREIGN KEY (fk_proveedor)
+            REFERENCES proveedor(id_proveedor)
+);
+
+/*FALTA...........*/
+
+
+-- VENTA
+CREATE TABLE venta (
+    id_venta INT PRIMARY KEY AUTO_INCREMENT,
+
+    fk_cliente INT,
+    fk_empleado INT,
+      cuenta VARCHAR(30) DEFAULT 'SINCUENTA',
+    fecha_venta DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+    metodo_pago VARCHAR(30),
+
+    subtotal DECIMAL(10,2),
+    descuento DECIMAL(10,2) DEFAULT 0,
+    total DECIMAL(10,2),
+
+    habi INT DEFAULT 1,
+    NombrePro VARCHAR(30),
+
+    FOREIGN KEY (fk_cliente)
+        REFERENCES cliente(id_cliente),
+
+    FOREIGN KEY (fk_empleado)
+        REFERENCES empleado(id_empleado)
+);
+
+-- PELICULAXVENTA
+CREATE TABLE peliculaXventa (
+    id_peliculaXventa INT PRIMARY KEY AUTO_INCREMENT,
+
+    fk_venta INT,
+    fk_pelicula INT,
+
+    cantidad INT NOT NULL,
+    DescuentoXproducto DECIMAL(10,2) DEFAULT 0,
+    habi INT DEFAULT 1,
+
+    FOREIGN KEY (fk_venta)
+        REFERENCES venta(id_venta),
+
+    FOREIGN KEY (fk_pelicula)
+        REFERENCES pelicula(id_pelicula)
+);
