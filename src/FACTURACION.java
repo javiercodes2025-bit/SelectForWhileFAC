@@ -372,6 +372,10 @@ public class FACTURACION extends conectarCls{
         modBTM.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+
+                conecV();
+                BDD = getCon();
+
                 try {
                     int fila = facTB.getSelectedRow();
                     if (fila == -1) {
@@ -452,6 +456,8 @@ public class FACTURACION extends conectarCls{
             @Override
             public void actionPerformed(ActionEvent e) {
 
+                conecV();
+                BDD = getCon();
 
                 int fila = facTB.getSelectedRow();
                 if (fila == -1) {
@@ -531,7 +537,7 @@ public class FACTURACION extends conectarCls{
 
     public void setVisible(boolean b){
         JFrame fac = new JFrame("FACTURACION");
-        fac.setContentPane(new FACTURACION().facJP);
+        fac.setContentPane(this.facJP);
         fac.pack();
         fac.setVisible(b);
 

@@ -314,12 +314,11 @@ public class EMPLEADO extends conectarCls {
         });
 
 
-
         cliBTN.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                CLIENTES cliSET = new CLIENTES();
-                cliSET.setVisible(true);
+                CLIENTES cli = new CLIENTES();
+                cli.setVisible(true);
 
 
                 javax.swing.SwingUtilities.getWindowAncestor(cliBTN).dispose();
@@ -338,6 +337,7 @@ public class EMPLEADO extends conectarCls {
                 javax.swing.SwingUtilities.getWindowAncestor(stockBTN).dispose();
             }
         });
+
 
 
 
@@ -364,7 +364,7 @@ public class EMPLEADO extends conectarCls {
     }
     public void setVisible(boolean b){
         JFrame emp = new JFrame("EMPLEADOS");
-        emp.setContentPane(new EMPLEADO().empJP);
+        emp.setContentPane(this.empJP);
         emp.pack();
         emp.setVisible(b);
 

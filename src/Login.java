@@ -77,14 +77,14 @@ public class Login extends conectarCls{
                         String rol = rs.getString("rol");
                         if (rol.equals("ADMINISTRADOR")) {
 
-                            EMPLEADO emp = new EMPLEADO();
-                            emp.setVisible(true);
+                            FACTURACION fac = new FACTURACION();
+                            fac.setVisible(true);
 
                             javax.swing.SwingUtilities.getWindowAncestor(ingrBTN).dispose();
                         } else if (rol.equals("EMPLEADO")) {
 
-                            EMPLEADO emp = new EMPLEADO();
-                            emp.setVisible(true);
+                            FACTURACIONEMPL fac = new FACTURACIONEMPL();
+                            fac.setVisible(true);
                             javax.swing.SwingUtilities.getWindowAncestor(ingrBTN).dispose();
 
                         } else {

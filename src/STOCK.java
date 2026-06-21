@@ -39,14 +39,6 @@ public class STOCK extends conectarCls {
         stockDFB.setRowCount(0);
         stockDFB.setColumnCount(0);
 
-
-//          String selectT =
-//                "SELECT  p.id_pelicula,  p.titulo, p.anio, p.duracion, p.precio, p.desc_x_produc, " +
-//                        "pr.nombre, s.cantidad " +
-//                        "FROM pelicula p " +
-//                        "LEFT JOIN stock s ON p.id_pelicula = s.fk_pelicula " +
-//                        "LEFT JOIN proveedor pr ON s.fk_proveedor = pr.id_proveedor " +
-//                        "WHERE p.habi = 1";
         String selectT =
                 "SELECT p.id_pelicula, p.titulo, p.anio, p.duracion, " +
                         "p.precio, p.desc_x_produc, s.cantidad " +
@@ -93,6 +85,8 @@ public class STOCK extends conectarCls {
         selectBTN.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                conecV();
+                BDD = getCon();
 
 
                 int fila= table1.getSelectedRow();
@@ -121,6 +115,7 @@ public class STOCK extends conectarCls {
             public void actionPerformed(ActionEvent e) {
                 conecV();
                 BDD = getCon();
+
                 int fila = table1.getSelectedRow();
                 if (fila != -1) {
                     JOptionPane.showMessageDialog(null,
@@ -164,6 +159,10 @@ public class STOCK extends conectarCls {
         modBTN.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                conecV();
+                BDD = getCon();
+
+
                 int fila = table1.getSelectedRow();
                 if (fila == -1) {
                     JOptionPane.showMessageDialog(null,
@@ -171,28 +170,30 @@ public class STOCK extends conectarCls {
                     return;
                 }
 
-                int idClie = Integer.parseInt(
+                int idPelicula = Integer.parseInt(
                         table1.getValueAt(fila, 0 ).toString()
                 );
-                /*
-                UPDATE pelicula p INNER JOIN stock s ON p.id_pelicula = s.fk_pelicula SET p.titulo = ?, p.anio = ?, p.duracion = ?, p.precio = ?, s.cantidad = ?  WHERE p.id_pelicula = ?;
-
-                 */
-
-                String SQLmodi = "  UPDATE pelicula p INNER JOIN stock s ON p.id_pelicula = s.fk_pelicula SET p.titulo = ?, p.anio = ?, p.duracion = ?, p.precio = ?, s.cantidad = ?  WHERE p.id_pelicula = ? ";
 
                 try {
-                    sqlSelect = BDD.prepareStatement(SQLmodi);
+                    BDD.setAutoCommit(false);
 
-
-                    sqlSelect.setString(1,tituloTF.getText());
+                    String sqlPeli = "UPDATE pelicula SET titulo=?, anio=?, duracion=?, precio=?, desc_x_produc=? WHERE id_pelicula=?";
+                    sqlSelect = BDD.prepareStatement(sqlPeli);
+                    sqlSelect.setString(1, tituloTF.getText());
                     sqlSelect.setInt(2, Integer.parseInt(anioTF.getText()));
                     sqlSelect.setInt(3, Integer.parseInt(duracTF.getText()));
-                    sqlSelect.setDouble(4,  Double.parseDouble(precioTF.getText()));
-                    sqlSelect.setInt(5, Integer.parseInt(canTF.getText()));
-                    sqlSelect.setInt(6,idClie);
-
+                    sqlSelect.setDouble(4, Double.parseDouble(precioTF.getText()));
+                    sqlSelect.setInt(5, Integer.parseInt(decuXTF.getText()));
+                    sqlSelect.setInt(6, idPelicula);
                     sqlSelect.executeUpdate();
+
+                    String sqlStock = "UPDATE stock SET cantidad=? WHERE fk_pelicula=?";
+                    sqlSelect = BDD.prepareStatement(sqlStock);
+                    sqlSelect.setInt(1, Integer.parseInt(canTF.getText()));
+                    sqlSelect.setInt(2, idPelicula);
+                    sqlSelect.executeUpdate();
+
+                    BDD.commit();
                     cargarTable();
 
                     tituloTF.setText("");
@@ -203,10 +204,10 @@ public class STOCK extends conectarCls {
                     idpeliTF.setText("");
                     decuXTF.setText("0");
 
-                    // quitar la selección de la tabla...
                     table1.clearSelection();
-                }catch (Exception  c){
-                    System.out.println("Update: Algo salio mal..."+c);
+                } catch (Exception c) {
+                    try { if (BDD != null) BDD.rollback(); } catch (SQLException ignored) {}
+                    JOptionPane.showMessageDialog(null, "Error al modificar: " + c.getMessage());
                     c.printStackTrace();
                 }
 
@@ -217,6 +218,8 @@ public class STOCK extends conectarCls {
         eliBTN.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                conecV();
+                BDD = getCon();
 
                 int fila = table1.getSelectedRow();
                 if (fila == -1) {
@@ -293,7 +296,7 @@ public class STOCK extends conectarCls {
     }
     public  void setVisible(boolean b){
         JFrame STK = new JFrame("STOCK");
-        STK.setContentPane(new STOCK().stockJP);
+        STK.setContentPane(this.stockJP);
         STK.pack();
         STK.setVisible(b);
 

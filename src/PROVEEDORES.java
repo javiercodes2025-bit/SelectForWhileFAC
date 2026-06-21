@@ -276,7 +276,7 @@ public class PROVEEDORES  extends conectarCls {
 
     public void setVisible(boolean b){
         JFrame emp = new JFrame("PROVEEDORES");
-        emp.setContentPane(new PROVEEDORES().proJP);
+        emp.setContentPane(this.proJP);
         emp.pack();
         emp.setVisible(b);
 

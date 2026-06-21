@@ -365,7 +365,7 @@ public class CLIENTES extends conectarCls{
 
     public  void setVisible(boolean b){
         JFrame cli = new JFrame("CLIENTES");
-        cli.setContentPane(new CLIENTES().cliJP);
+        cli.setContentPane(this.cliJP);
         cli.pack();
         cli.setVisible(b);
 
