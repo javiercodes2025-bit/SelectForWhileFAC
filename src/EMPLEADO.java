@@ -22,6 +22,11 @@ public class EMPLEADO extends conectarCls {
     private JButton selBTN;
     private JTextField numdTF;
     private JComboBox TipoComBox;
+    private JTextField textField1;
+    private JTextField nombreTF;
+    private JTextField apellidoTF;
+    private JButton BuscadorBTN;
+    private JLabel HoraEntradaCBX;
 
     /*
       Select xx, xx, xx  from persona where habilitado = 1
@@ -378,6 +383,12 @@ public class EMPLEADO extends conectarCls {
 
 
                 javax.swing.SwingUtilities.getWindowAncestor(facBTN).dispose();
+            }
+        });
+        BuscadorBTN.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
             }
         });
     }
