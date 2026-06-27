@@ -22,7 +22,7 @@ public class EMPLEADO extends conectarCls {
     private JButton selBTN;
     private JTextField numdTF;
     private JComboBox TipoComBox;
-    private JTextField textField1;
+    private JTextField idempleadoTF;
     private JTextField nombreTF;
     private JTextField apellidoTF;
     private JButton BuscadorBTN;
@@ -169,49 +169,56 @@ public class EMPLEADO extends conectarCls {
             }
         });
 
-
         agrBTN.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 conecV();
                 BDD = getCon();
 
-                int fila = table1.getSelectedRow();
+                if (nombreTF.getText().trim().isEmpty()) {
+                    JOptionPane.showMessageDialog(null,
+                            "Busque un empleado para completar...");
+                    return;
+                }
+
+                String idTexto = idempleadoTF.getText().trim();
+                if (idTexto.isEmpty()) {
+                    JOptionPane.showMessageDialog(null,
+                            "ID de empleado no válido...");
+                    return;
+                }
+                int fkPersona = Integer.parseInt(idTexto);
 
                 String SQLinsert = "{CALL registrarEmpleado(?,?,?,?,?,?)}";
 
+                if(TipoComBox.getSelectedIndex() == 0){
+                    JOptionPane.showMessageDialog(
+                            null,
+                            "Seleccione un Tipo..."
+                    );
+                    return;
+                }
                 try {
-
-                    if (fila == -1) {
+                    // Verificar si ya está registrado como empleado
+                    sql1 = BDD.prepareStatement(
+                            "SELECT hora_entrada FROM empleado WHERE fk_persona = ?"
+                    );
+                    sql1.setInt(1, fkPersona);
+                    rs = sql1.executeQuery();
+                    if (rs.next()) {
                         JOptionPane.showMessageDialog(null,
-                                "Elegí una empleado para completarlo...");
+                                "Esta persona ya está registrada como empleado");
                         return;
                     }
-                    int fkPersona = Integer.parseInt(table1.getValueAt(fila, 0).toString()
-                    );
+
                     sql1 = BDD.prepareCall(SQLinsert);
-                    /*La columna 0 contiene id_persona(Select) para tu fk_persona*/
-
-
                     sql1.setInt(1, fkPersona);
-
                     sql1.setString(2, hEnTF.getText());
                     sql1.setString(3, hsaTF.getText());
-
                     sql1.setInt(4, Integer.parseInt(sueldoTF.getText()));
                     sql1.setString(5, numdTF.getText());
+
                     sql1.setString(6, TipoComBox.getSelectedItem().toString());
-
-                    if (table1.getValueAt(fila, 7) != null ||
-                            table1.getValueAt(fila, 8) != null ||
-                            table1.getValueAt(fila, 9) != null) {
-
-                        JOptionPane.showMessageDialog(
-                                null,
-                                "Esta persona ya está registrada como empleado"
-                        );
-                        return;
-                    }
                     sql1.executeUpdate();
 
                     cargarTable();
@@ -219,17 +226,18 @@ public class EMPLEADO extends conectarCls {
                     hEnTF.setText("");
                     hsaTF.setText("");
                     sueldoTF.setText("");
-
                     idEmpTF.setText("");
                     numdTF.setText("");
                     TipoComBox.setSelectedIndex(0);
+                    idempleadoTF.setText("");
+                    nombreTF.setText("");
+                    apellidoTF.setText("");
+
+
 
                 } catch (SQLException ex) {
-
                     ex.printStackTrace();
                 }
-
-
             }
         });
 
@@ -250,6 +258,16 @@ public class EMPLEADO extends conectarCls {
                 int idEmpl = Integer.parseInt(
                         table1.getValueAt(fila, 0 ).toString()
                 );
+
+
+                String rol = table1.getValueAt(fila, 6).toString();
+                if (rol.equals("ADMINISTRADOR")) {
+                    JOptionPane.showMessageDialog(null,
+                            "No se puede eliminar un Administrador");
+                    return;
+                }
+
+
                 String SQLmodi = "update persona set habilitado = 0 where id_persona =?";
                 try {
 
@@ -336,7 +354,41 @@ public class EMPLEADO extends conectarCls {
                 }
             }
         });
+        BuscadorBTN.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                conecV();
+                BDD = getCon();
 
+                String idTexto = idempleadoTF.getText().trim();
+                if (idTexto.isEmpty()) {
+                    JOptionPane.showMessageDialog(null, "Ingrese un ID de empleado...");
+                    return;
+                }
+
+                try {
+                    sql1 = BDD.prepareStatement(
+                            "SELECT nombre, apellido FROM persona \n" +
+                                    "WHERE id_persona = ? AND rol IN ('EMPLEADO','ADMINISTRADOR') AND habilitado = 1"
+                    );
+                    sql1.setInt(1, Integer.parseInt(idTexto));
+                    rs = sql1.executeQuery();
+
+                    if (rs.next()) {
+                        nombreTF.setText(rs.getString("nombre"));
+                        apellidoTF.setText(rs.getString("apellido"));
+                    } else {
+                        JOptionPane.showMessageDialog(null, "Persona no encontrada");
+                        nombreTF.setText("");
+                        apellidoTF.setText("");
+                    }
+
+                } catch (SQLException | NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(null, "ID inválido...");
+                    ex.printStackTrace();
+                }
+            }
+        });
 
         cliBTN.addActionListener(new ActionListener() {
             @Override
@@ -385,12 +437,7 @@ public class EMPLEADO extends conectarCls {
                 javax.swing.SwingUtilities.getWindowAncestor(facBTN).dispose();
             }
         });
-        BuscadorBTN.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
 
-            }
-        });
     }
     public void setVisible(boolean b){
         JFrame emp = new JFrame("EMPLEADOS");
