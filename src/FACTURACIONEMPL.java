@@ -1,21 +1,22 @@
 import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.*;
+import java.util.Locale;
 
 public class FACTURACIONEMPL extends conectarCls{
     private JButton cliBTN;
     private JButton stockBTN;
     private JButton agreBTN;
-    private JButton eliBTN;
 
     private JTextField desTF;
     private JTextField subTF;
     private JTextField canTF;
     private JTextField totalTF;
 
-    private JTable facTB;
     private JComboBox metCbox;
     private JPanel facJP;
     private JTextField cueTF;
@@ -29,72 +30,77 @@ public class FACTURACIONEMPL extends conectarCls{
     private JTextField nomTF;
     private JTextField desXproTF;
     private JButton atrasBTN;
+    private JTable carritoTable;
+    private JButton finBTN;
+    private JButton quitarBTN;
+    private JButton HistorialfacBTN;
 
     Connection BDD;
     ResultSet rs = null;
     PreparedStatement sql1;
 
-    DefaultTableModel facDTJ = new DefaultTableModel();
+    DefaultTableModel carritoModel = new DefaultTableModel();
 
-    public void cargarTable() {
+    private void alterTableBD() {
         conecV();
         BDD = getCon();
-
-        facDTJ.setRowCount(0);
-        facDTJ.setColumnCount(0);
-
-        String sqlSelect =
-                "SELECT v.id_venta, v.cuenta, v.NombrePro, v.metodo_pago, " +
-                        "SUM(pxv.cantidad) AS cantidad, " +
-                        "v.subtotal, v.descuento, v.total, v.fecha_venta " +
-                        "FROM venta v " +
-                        "INNER JOIN peliculaXventa pxv ON v.id_venta = pxv.fk_venta " +
-                        "WHERE v.habi = 1 AND pxv.habi = 1 " +
-                        "GROUP BY v.id_venta " +
-                        "ORDER BY v.fecha_venta DESC";
-
         try {
             sql1 = BDD.prepareStatement(
                 "ALTER TABLE venta MODIFY COLUMN NombrePro VARCHAR(500)"
             );
             sql1.execute();
-
-            sql1 = BDD.prepareStatement(sqlSelect);
-            rs = sql1.executeQuery();
-
-            ResultSetMetaData comDATA = rs.getMetaData();
-            int comL = comDATA.getColumnCount();
-
-            facDTJ.addColumn("ID_VENTA");
-            facDTJ.addColumn("CUENTA");
-            facDTJ.addColumn("NOMBREPRO");
-            facDTJ.addColumn("METODO_PAGO");
-            facDTJ.addColumn("CANTIDAD");
-            facDTJ.addColumn("SUBTOTAL");
-            facDTJ.addColumn("DESCUENTO");
-            facDTJ.addColumn("TOTAL");
-            facDTJ.addColumn("FECHA_VENTA");
-
-            while (rs.next()) {
-
-                Object[] fila = new Object[comL];
-
-                for (int i = 0; i < comL; i++) {
-                    fila[i] = rs.getObject(i + 1);
-                }
-
-                facDTJ.addRow(fila);
-            }
-
         } catch (SQLException c) {
             c.printStackTrace();
         }
     }
 
     public FACTURACIONEMPL() {
-        facTB.setModel(facDTJ);
-        cargarTable();
+        alterTableBD();
 
+        carritoTable.setModel(carritoModel);
+        carritoModel.addColumn("CÓDIGO");
+        carritoModel.addColumn("PELÍCULA");
+        carritoModel.addColumn("CANTIDAD");
+        carritoModel.addColumn("PRECIO");
+        carritoModel.addColumn("DESC_X_PROD");
+        carritoModel.addColumn("SUBTOTAL");
+        carritoModel.addColumn("METODO_PAGO");
+
+        carritoTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                if (e.getValueIsAdjusting()) return;
+                int fila = carritoTable.getSelectedRow();
+                if (fila == -1) return;
+
+                codTF.setText(carritoModel.getValueAt(fila, 0).toString());
+                npeliTF.setText(carritoModel.getValueAt(fila, 1).toString());
+                canTF.setText(carritoModel.getValueAt(fila, 2).toString());
+                preTF.setText(carritoModel.getValueAt(fila, 3).toString());
+                desXproTF.setText(carritoModel.getValueAt(fila, 4).toString());
+
+                String metodo = carritoModel.getValueAt(fila, 6).toString();
+                for (int i = 0; i < metCbox.getItemCount(); i++) {
+                    if (metCbox.getItemAt(i).toString().equals(metodo)) {
+                        metCbox.setSelectedIndex(i);
+                        break;
+                    }
+                }
+
+                conecV();
+                BDD = getCon();
+                try {
+                    sql1 = BDD.prepareStatement(
+                        "SELECT cantidad FROM stock WHERE fk_pelicula = ?"
+                    );
+                    sql1.setInt(1, Integer.parseInt(codTF.getText()));
+                    rs = sql1.executeQuery();
+                    if (rs.next()) stockTF.setText(rs.getString("cantidad"));
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
 
         buscliTF.addActionListener(new ActionListener() {
             @Override
@@ -208,196 +214,354 @@ public class FACTURACIONEMPL extends conectarCls{
         agreBTN.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-
+                if (npeliTF.getText().trim().isEmpty()) {
+                    JOptionPane.showMessageDialog(null, "Busque un producto primero...");
+                    return;
+                }
+                if (metCbox.getSelectedIndex() == 0) {
+                    JOptionPane.showMessageDialog(null, "Seleccione un metodo de pago...");
+                    return;
+                }
+                if (canTF.getText().trim().isEmpty() || stockTF.getText().trim().isEmpty() || preTF.getText().trim().isEmpty()) {
+                    JOptionPane.showMessageDialog(null, "Complete cantidad, stock y precio antes de agregar...");
+                    return;
+                }
                 try {
-                    conecV();
-                    BDD = getCon();
-
-                    String regVen = "{CALL registrarVenta(?,?,?,?,?,?,?,?,?)}";
-                    sql1 = BDD.prepareCall(regVen);
-                    sql1.setString(1, nomTF.getText());
-
-                    sql1.setString(2,
-                            metCbox.getSelectedItem().toString());
-
-                    if(metCbox.getSelectedIndex() == 0){
-                        JOptionPane.showMessageDialog(
-                                null,
-                                "Seleccione un metodo..."
-                        );
-                        return;
-                    }
-                    sql1.setDouble(3, Double.parseDouble(subTF.getText()));
-                    sql1.setDouble(4, Double.parseDouble(desTF.getText()));
-                    sql1.setDouble(5, Double.parseDouble(totalTF.getText()));
-
-                    sql1.setString(6, npeliTF.getText());
-
-                    sql1.setInt(7, Integer.parseInt(codTF.getText()));
-
-
                     int cantidad = Integer.parseInt(canTF.getText());
                     int stock = Integer.parseInt(stockTF.getText());
 
                     if (cantidad <= 0) {
-                        JOptionPane.showMessageDialog(
-                                null,
-                                "La cantidad debe ser mayor a 0"
-                        );
+                        JOptionPane.showMessageDialog(null, "La cantidad debe ser mayor a 0");
                         return;
                     }
-
                     if (cantidad > stock) {
-                        JOptionPane.showMessageDialog(
-                                null,
-                                "Stock insuficiente. Disponible: " + stock
-                        );
+                        JOptionPane.showMessageDialog(null, "Stock insuficiente. Disponible: " + stock);
                         return;
                     }
 
-                    sql1.setInt(8, Integer.parseInt(canTF.getText()));
-                    sql1.setDouble(9, Double.parseDouble(desXproTF.getText()));
+                    double precio = Double.parseDouble(preTF.getText());
+                    double descProducto = desXproTF.getText().trim().isEmpty() ? 0 : Double.parseDouble(desXproTF.getText());
+                    if (descProducto < 0 || descProducto > 100) {
+                        JOptionPane.showMessageDialog(null, "El descuentoXproducto debe estar entre 0 y 100");
+                        return;
+                    }
 
+                    int rowExistente = -1;
+                    for (int i = 0; i < carritoModel.getRowCount(); i++) {
+                        if (carritoModel.getValueAt(i, 0).toString().equals(codTF.getText())) {
+                            rowExistente = i;
+                            break;
+                        }
+                    }
 
-                    sql1.execute();
+                    if (rowExistente != -1) {
+                        int cantActual = Integer.parseInt(carritoModel.getValueAt(rowExistente, 2).toString());
+                        if (cantActual + cantidad > stock) {
+                            JOptionPane.showMessageDialog(null, "Stock insuficiente. Disponible: " + stock + ", ya tiene " + cantActual + " en el carrito");
+                            return;
+                        }
+                        int nuevaCant = cantActual + cantidad;
+                        double nuevoSubtotal = precio * nuevaCant;
+                        nuevoSubtotal = nuevoSubtotal - (nuevoSubtotal * descProducto / 100.0);
 
+                        carritoModel.setValueAt(String.valueOf(nuevaCant), rowExistente, 2);
+                        carritoModel.setValueAt(String.format(Locale.US, "%.2f", precio), rowExistente, 3);
+                        carritoModel.setValueAt(String.format(Locale.US, "%.2f", descProducto), rowExistente, 4);
+                        carritoModel.setValueAt(String.format(Locale.US, "%.2f", nuevoSubtotal), rowExistente, 5);
+                        carritoModel.setValueAt(metCbox.getSelectedItem().toString(), rowExistente, 6);
+                    } else {
+                        double subtotalItem = precio * cantidad;
+                        subtotalItem = subtotalItem - (subtotalItem * descProducto / 100.0);
 
+                        Object[] item = {
+                                codTF.getText(),
+                                npeliTF.getText(),
+                                String.valueOf(cantidad),
+                                String.format(Locale.US, "%.2f", precio),
+                                String.format(Locale.US, "%.2f", descProducto),
+                                String.format(Locale.US, "%.2f", subtotalItem),
+                                metCbox.getSelectedItem().toString()
+                        };
+                        carritoModel.addRow(item);
+                    }
 
-                    cueTF.setText("");
-                    subTF.setText("");
-                    desTF.setText("0");
+                    double subtotalTotal = 0;
+                    for (int i = 0; i < carritoModel.getRowCount(); i++) {
+                        subtotalTotal += Double.parseDouble(carritoModel.getValueAt(i, 5).toString());
+                    }
+                    subTF.setText(String.format(Locale.US, "%.2f", subtotalTotal));
 
-                    totalTF.setText("");
+                    double descuento = desTF.getText().trim().isEmpty() ? 0 : Double.parseDouble(desTF.getText());
+                    double totalFinal = subtotalTotal - (subtotalTotal * descuento / 100.0);
+                    totalTF.setText(String.format(Locale.US, "%.2f", totalFinal));
+
                     codTF.setText("");
                     canTF.setText("");
-
                     npeliTF.setText("");
-
                     stockTF.setText("");
                     preTF.setText("");
-                    nomTF.setText("SINCUENTA");
-                    desXproTF.setText("0");
+                    desXproTF.setText("");
 
-                    cargarTable();
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                    JOptionPane.showMessageDialog(
-                            null,
-                            "Ingrese todos los campos..."
-                    );
+                } catch (NumberFormatException ex) {
+                    }
+            }
+        });
+
+        quitarBTN.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int fila = carritoTable.getSelectedRow();
+                if (fila == -1) {
+                    JOptionPane.showMessageDialog(null, "Seleccione un item del carrito...");
+                    return;
                 }
+                carritoModel.removeRow(fila);
+
+                double subtotalTotal = 0;
+                for (int i = 0; i < carritoModel.getRowCount(); i++) {
+                    subtotalTotal += Double.parseDouble(carritoModel.getValueAt(i, 5).toString());
+                }
+                subTF.setText(carritoModel.getRowCount() == 0 ? "" : String.format(Locale.US, "%.2f", subtotalTotal));
+
+                double descuento = desTF.getText().trim().isEmpty() ? 0 : Double.parseDouble(desTF.getText());
+                double totalFinal = subtotalTotal - (subtotalTotal * descuento / 100.0);
+                totalTF.setText(carritoModel.getRowCount() == 0 ? "" : String.format(Locale.US, "%.2f", totalFinal));
             }
         });
 
         modBTM.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                try {
-                    int fila = facTB.getSelectedRow();
-                    if (fila == -1) {
-                        JOptionPane.showMessageDialog(
-                                null,  "Seleccione una factura"
-                        );
-                        return;
-                    }
-
-                    int idVenta = Integer.parseInt( facTB.getValueAt(fila, 0).toString()
-                    );
-
-                    String modVentas =   "{CALL modificarVenta(?,?,?,?,?,?,?,?,?)}";
-                    sql1 = BDD.prepareCall(modVentas);
-
-                    sql1.setInt(1, idVenta);
-
-                    sql1.setString(2, nomTF.getText());
-
-                    sql1.setString(3,
-                            metCbox.getSelectedItem().toString());
-
-                    if (metCbox.getSelectedIndex() == 0) {
-                        JOptionPane.showMessageDialog(
-                                null,
-                                "Seleccione un metodo..."
-                        );
-                        return;
-                    }
-
-                    if(subTF.getText().trim().isEmpty()
-                            || totalTF.getText().trim().isEmpty()){
-
-                        JOptionPane.showMessageDialog(
-                                null,
-                                "Calcule el subtotal y total primero"
-                        );
-                        return;
-                    }
-
-                    sql1.setDouble(4, Double.parseDouble(subTF.getText()));
-
-                    sql1.setDouble(5, Double.parseDouble(desTF.getText()));
-
-                    sql1.setDouble(6, Double.parseDouble(totalTF.getText()));
-
-                    sql1.setString(7, npeliTF.getText());
-
-                    int cantidad = Integer.parseInt(canTF.getText());
-
-
-                    if (cantidad <= 0) {
-                        JOptionPane.showMessageDialog(
-                                null,
-                                "La cantidad debe ser mayor a 0"
-                        );
-                        return;
-                    }
-
-
-                    sql1.setInt(8, cantidad);
-                    sql1.setDouble(9,   Double.parseDouble(desXproTF.getText()));
-                    sql1.executeUpdate();
-
-                    cargarTable();
-                } catch (Exception ex) {
-
-                    ex.printStackTrace();
-                }
-            }
-        });
-
-        eliBTN.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-
-
-                int fila = facTB.getSelectedRow();
+                int fila = carritoTable.getSelectedRow();
                 if (fila == -1) {
-                    JOptionPane.showMessageDialog(null,
-                            "Seleccione una Venta de la tabla");
-
+                    JOptionPane.showMessageDialog(null, "Seleccione un item del carrito...");
                     return;
                 }
 
-                int idVenta = Integer.parseInt(
-                        facTB.getValueAt(fila, 0 ).toString()
-                );
-                String DesVenta =
-                        "UPDATE venta v  INNER JOIN peliculaXventa pxv ON v.id_venta = pxv.fk_venta " +
-                                "SET v.habi = 0, pxv.habi = 0 WHERE v.id_venta = ?";
+                if (metCbox.getSelectedIndex() == 0) {
+                    JOptionPane.showMessageDialog(null, "Seleccione un metodo de pago...");
+                    return;
+                }
+
+                if (stockTF.getText().trim().isEmpty()) {
+                    JOptionPane.showMessageDialog(null, "Busque el stock del producto primero...");
+                    return;
+                }
+                if (canTF.getText().trim().isEmpty() || preTF.getText().trim().isEmpty()) {
+                    JOptionPane.showMessageDialog(null, "Complete cantidad y precio...");
+                    return;
+                }
+
                 try {
+                    int cantidad = Integer.parseInt(canTF.getText());
+                    int stock = Integer.parseInt(stockTF.getText());
 
-                    sql1 = BDD.prepareStatement(DesVenta);
-                    sql1.setInt(1,idVenta);
-                    sql1.executeUpdate();
-                    cargarTable();
+                    if (cantidad <= 0) {
+                        JOptionPane.showMessageDialog(null, "La cantidad debe ser mayor a 0");
+                        return;
+                    }
+                    if (cantidad > stock) {
+                        JOptionPane.showMessageDialog(null, "Stock insuficiente. Disponible: " + stock);
+                        return;
+                    }
 
-                }catch (Exception  c){
-                    System.out.println("Eliminar: Algo salio mal..."+c);
-                    c.printStackTrace();
+                    double precio = Double.parseDouble(preTF.getText());
+                    double descProducto = desXproTF.getText().trim().isEmpty() ? 0 : Double.parseDouble(desXproTF.getText());
+                    if (descProducto < 0 || descProducto > 100) {
+                        JOptionPane.showMessageDialog(null, "El descuentoXproducto debe estar entre 0 y 100");
+                        return;
+                    }
+
+                    double subtotalItem = precio * cantidad;
+                    subtotalItem = subtotalItem - (subtotalItem * descProducto / 100.0);
+
+                    carritoModel.setValueAt(String.valueOf(cantidad), fila, 2);
+                    carritoModel.setValueAt(String.format(Locale.US, "%.2f", precio), fila, 3);
+                    carritoModel.setValueAt(String.format(Locale.US, "%.2f", descProducto), fila, 4);
+                    carritoModel.setValueAt(String.format(Locale.US, "%.2f", subtotalItem), fila, 5);
+                    carritoModel.setValueAt(metCbox.getSelectedItem().toString(), fila, 6);
+
+                    double subtotalTotal = 0;
+                    for (int i = 0; i < carritoModel.getRowCount(); i++) {
+                        subtotalTotal += Double.parseDouble(carritoModel.getValueAt(i, 5).toString());
+                    }
+                    subTF.setText(String.format(Locale.US, "%.2f", subtotalTotal));
+
+                    double descuento = desTF.getText().trim().isEmpty() ? 0 : Double.parseDouble(desTF.getText());
+                    double totalFinal = subtotalTotal - (subtotalTotal * descuento / 100.0);
+                    totalTF.setText(String.format(Locale.US, "%.2f", totalFinal));
+
+                    codTF.setText("");
+                    canTF.setText("");
+                    npeliTF.setText("");
+                    stockTF.setText("");
+                    preTF.setText("");
+                    desXproTF.setText("");
+
+                } catch (NumberFormatException ex) {
                 }
             }
         });
 
+        finBTN.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (carritoModel.getRowCount() == 0) {
+                    JOptionPane.showMessageDialog(null, "Agregue productos al carrito primero...");
+                    return;
+                }
 
+                conecV();
+                BDD = getCon();
+
+                try {
+                    BDD.setAutoCommit(false);
+
+                    double descuento = desTF.getText().trim().isEmpty() ? 0 : Double.parseDouble(desTF.getText());
+
+                    java.util.Map<String, java.util.List<Integer>> grupos = new java.util.LinkedHashMap<>();
+                    for (int i = 0; i < carritoModel.getRowCount(); i++) {
+                        String metodo = carritoModel.getValueAt(i, 6).toString();
+                        if (!grupos.containsKey(metodo)) grupos.put(metodo, new java.util.ArrayList<>());
+                        grupos.get(metodo).add(i);
+                    }
+
+                    for (java.util.Map.Entry<String, java.util.List<Integer>> entry : grupos.entrySet()) {
+                        String metodo = entry.getKey();
+                        java.util.List<Integer> filas = entry.getValue();
+
+                        StringBuilder nombres = new StringBuilder();
+                        double subTotalGrupo = 0;
+                        for (int f : filas) {
+                            subTotalGrupo += Double.parseDouble(carritoModel.getValueAt(f, 5).toString());
+                            if (nombres.length() > 0) nombres.append(", ");
+                            nombres.append(carritoModel.getValueAt(f, 1).toString());
+                        }
+                        double totalGrupo = subTotalGrupo - (subTotalGrupo * descuento / 100.0);
+
+                        sql1 = BDD.prepareStatement(
+                                "INSERT INTO venta(cuenta, metodo_pago, subtotal, descuento, total, NombrePro) " +
+                                        "VALUES(?,?,?,?,?,?)",
+                                Statement.RETURN_GENERATED_KEYS
+                        );
+                        sql1.setString(1, nomTF.getText());
+                        sql1.setString(2, metodo);
+                        sql1.setDouble(3, subTotalGrupo);
+                        sql1.setDouble(4, descuento);
+                        sql1.setDouble(5, totalGrupo);
+                        sql1.setString(6, nombres.toString());
+                        sql1.executeUpdate();
+
+                        rs = sql1.getGeneratedKeys();
+                        int idVenta = 0;
+                        if (rs.next()) idVenta = rs.getInt(1);
+
+                        for (int f : filas) {
+                            int idPelicula = Integer.parseInt(carritoModel.getValueAt(f, 0).toString());
+                            int cant = Integer.parseInt(carritoModel.getValueAt(f, 2).toString());
+                            double descXProd = Double.parseDouble(carritoModel.getValueAt(f, 4).toString());
+
+                            sql1 = BDD.prepareStatement(
+                                    "INSERT INTO peliculaXventa(fk_venta, fk_pelicula, cantidad, DescuentoXproducto) " +
+                                            "VALUES(?,?,?,?)"
+                            );
+                            sql1.setInt(1, idVenta);
+                            sql1.setInt(2, idPelicula);
+                            sql1.setInt(3, cant);
+                            sql1.setDouble(4, descXProd);
+                            sql1.executeUpdate();
+
+                            sql1 = BDD.prepareStatement(
+                                    "UPDATE stock SET cantidad = cantidad - ? WHERE fk_pelicula = ?"
+                            );
+                            sql1.setInt(1, cant);
+                            sql1.setInt(2, idPelicula);
+                            sql1.executeUpdate();
+                        }
+                    }
+
+                    BDD.commit();
+
+                    carritoModel.setRowCount(0);
+                    cueTF.setText("");
+                    subTF.setText("");
+                    desTF.setText("0");
+                    totalTF.setText("");
+                    codTF.setText("");
+                    canTF.setText("");
+                    npeliTF.setText("");
+                    stockTF.setText("");
+                    preTF.setText("");
+                    nomTF.setText("SINCUENTA");
+                    desXproTF.setText("0");
+
+                } catch (SQLException ex) {
+                    try { BDD.rollback(); } catch (SQLException rb) { rb.printStackTrace(); }
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(null, "Error al registrar la venta...");
+                } finally {
+                    try { BDD.setAutoCommit(true); } catch (SQLException ac) { ac.printStackTrace(); }
+                }
+            }
+        });
+
+        HistorialfacBTN.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JDialog dialog = new JDialog(
+                    (java.awt.Window) SwingUtilities.getWindowAncestor(facJP),
+                    "Historial de Facturas",
+                    java.awt.Dialog.ModalityType.APPLICATION_MODAL
+                );
+
+                DefaultTableModel historialModel = new DefaultTableModel();
+                JTable historialTable = new JTable(historialModel);
+
+                conecV();
+                BDD = getCon();
+                try {
+                    sql1 = BDD.prepareStatement(
+                        "SELECT v.id_venta, v.cuenta, v.NombrePro, v.metodo_pago, " +
+                            "SUM(pxv.cantidad) AS cantidad, " +
+                            "v.subtotal, v.descuento, v.total, v.fecha_venta " +
+                            "FROM venta v " +
+                            "INNER JOIN peliculaXventa pxv ON v.id_venta = pxv.fk_venta " +
+                            "WHERE v.habi = 1 AND pxv.habi = 1 " +
+                            "GROUP BY v.id_venta " +
+                            "ORDER BY v.fecha_venta DESC"
+                    );
+                    rs = sql1.executeQuery();
+
+                    ResultSetMetaData meta = rs.getMetaData();
+                    int cols = meta.getColumnCount();
+
+                    historialModel.addColumn("ID_VENTA");
+                    historialModel.addColumn("CUENTA");
+                    historialModel.addColumn("NOMBREPRO");
+                    historialModel.addColumn("METODO_PAGO");
+                    historialModel.addColumn("CANTIDAD");
+                    historialModel.addColumn("SUBTOTAL");
+                    historialModel.addColumn("DESCUENTO");
+                    historialModel.addColumn("TOTAL");
+                    historialModel.addColumn("FECHA_VENTA");
+
+                    while (rs.next()) {
+                        Object[] fila = new Object[cols];
+                        for (int i = 0; i < cols; i++) {
+                            fila[i] = rs.getObject(i + 1);
+                        }
+                        historialModel.addRow(fila);
+                    }
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+
+                dialog.add(new JScrollPane(historialTable));
+                dialog.setSize(900, 400);
+                dialog.setLocationRelativeTo(null);
+                dialog.setVisible(true);
+            }
+        });
 
         cliBTN.addActionListener(new ActionListener() {
             @Override
@@ -436,12 +600,11 @@ public class FACTURACIONEMPL extends conectarCls{
     public void setVisible(boolean b){
         JFrame fac = new JFrame("FACTURACION");
         fac.setContentPane(new FACTURACIONEMPL().facJP);
+        fac.setPreferredSize(new java.awt.Dimension(900, 850));
+        fac.setMinimumSize(new java.awt.Dimension(900, 850));
         fac.pack();
         fac.setVisible(b);
 
-
-
-        fac.setMinimumSize(new java.awt.Dimension(900, 700));
         fac.setLocationRelativeTo(null);
     }
 
