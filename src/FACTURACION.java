@@ -1,4 +1,6 @@
 import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -11,8 +13,6 @@ public class FACTURACION extends conectarCls{
     private JButton proBTN;
     private JButton stockBTN;
     private JButton agreBTN;
-
-    private JButton calBTN;
 
     private JTextField desTF;
     private JTextField subTF;
@@ -36,6 +36,7 @@ public class FACTURACION extends conectarCls{
     private JTable carritoTable;
     private JButton finBTN;
     private JButton quitarBTN;
+    private JButton HistorialfacBTN;
 
     Connection BDD;
     ResultSet rs = null;
@@ -111,6 +112,42 @@ public class FACTURACION extends conectarCls{
         carritoModel.addColumn("DESC_X_PROD");
         carritoModel.addColumn("SUBTOTAL");
         carritoModel.addColumn("METODO_PAGO");
+
+        carritoTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                if (e.getValueIsAdjusting()) return;
+                int fila = carritoTable.getSelectedRow();
+                if (fila == -1) return;
+
+                codTF.setText(carritoModel.getValueAt(fila, 0).toString());
+                npeliTF.setText(carritoModel.getValueAt(fila, 1).toString());
+                canTF.setText(carritoModel.getValueAt(fila, 2).toString());
+                preTF.setText(carritoModel.getValueAt(fila, 3).toString());
+                desXproTF.setText(carritoModel.getValueAt(fila, 4).toString());
+
+                String metodo = carritoModel.getValueAt(fila, 6).toString();
+                for (int i = 0; i < metCbox.getItemCount(); i++) {
+                    if (metCbox.getItemAt(i).toString().equals(metodo)) {
+                        metCbox.setSelectedIndex(i);
+                        break;
+                    }
+                }
+
+                conecV();
+                BDD = getCon();
+                try {
+                    sql1 = BDD.prepareStatement(
+                        "SELECT cantidad FROM stock WHERE fk_pelicula = ?"
+                    );
+                    sql1.setInt(1, Integer.parseInt(codTF.getText()));
+                    rs = sql1.executeQuery();
+                    if (rs.next()) stockTF.setText(rs.getString("cantidad"));
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
 
         buscliTF.addActionListener(new ActionListener() {
             @Override
@@ -211,80 +248,7 @@ public class FACTURACION extends conectarCls{
             }
         });
 
-        calBTN.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
 
-                try {
-                    // descuento por producto, desXproTF
-                    double precio = Double.parseDouble(preTF.getText());
-
-                    int cantidad = Integer.parseInt(canTF.getText());
-                    int stock = Integer.parseInt(stockTF.getText());
-
-                    if (cantidad <= 0) {
-                        JOptionPane.showMessageDialog(
-                                null,
-                                "La cantidad debe ser mayor a 0"
-                        );
-                        return;
-                    }
-
-                    if (cantidad > stock) {
-                        JOptionPane.showMessageDialog(
-                                null,
-                                "Stock insuficiente. Disponible: " + stock
-                        );
-                        return;
-                    }
-                    double descProducto = 0;
-                    double descuento = 0;
-
-                    if (!desTF.getText().trim().isEmpty()) {
-                        descuento = Double.parseDouble(desTF.getText());
-                        if (descuento < 0 || descuento > 100) {
-                            JOptionPane.showMessageDialog(
-                                    null,
-                                    "El descuento debe estar entre 0 y 100"
-                            );
-                            return;
-                        }
-                    }
-
-                    if (!desXproTF.getText().trim().isEmpty()) {
-                        descProducto = Double.parseDouble(desXproTF.getText()); // descuento producto
-                        if (descProducto < 0 || descProducto > 100) {
-                            JOptionPane.showMessageDialog(
-                                    null,
-                                    "El descuentoXproducto debe estar entre 0 y 100"
-                            );
-                            return;
-                        }
-                    }
-
-                    double subtotal = precio * cantidad;
-                    // descuento del producto
-                    subtotal = subtotal - (subtotal * descProducto / 100.0);
-
-                    // descuento general
-                    double total = 0;
-                    total =   subtotal - (subtotal * descuento / 100.0);
-
-                    subTF.setText(String.valueOf(subtotal));
-                    totalTF.setText(String.valueOf(total));
-
-
-                } catch (Exception ex) {
-
-                    JOptionPane.showMessageDialog(
-                            null,
-                            "Ingrese un número valido... "
-                    );
-                    return;
-
-                }
-            }
-        });
         metCbox.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -520,82 +484,73 @@ public class FACTURACION extends conectarCls{
         modBTM.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                int fila = carritoTable.getSelectedRow();
+                if (fila == -1) {
+                    JOptionPane.showMessageDialog(null, "Seleccione un item del carrito...");
+                    return;
+                }
 
-                conecV();
-                BDD = getCon();
+                if (metCbox.getSelectedIndex() == 0) {
+                    JOptionPane.showMessageDialog(null, "Seleccione un metodo de pago...");
+                    return;
+                }
+
+                if (stockTF.getText().trim().isEmpty()) {
+                    JOptionPane.showMessageDialog(null, "Busque el stock del producto primero...");
+                    return;
+                }
+                if (canTF.getText().trim().isEmpty() || preTF.getText().trim().isEmpty()) {
+                    JOptionPane.showMessageDialog(null, "Complete cantidad y precio...");
+                    return;
+                }
 
                 try {
-                    int fila = facTB.getSelectedRow();
-                    if (fila == -1) {
-                        JOptionPane.showMessageDialog(
-                                null,  "Seleccione una factura"
-                        );
-                        return;
-                    }
-
-                    int idVenta = Integer.parseInt( facTB.getValueAt(fila, 0).toString()
-                    );
-
-                    String modVentas =   "{CALL modificarVenta(?,?,?,?,?,?,?,?,?)}";
-                    sql1 = BDD.prepareCall(modVentas);
-
-                    sql1.setInt(1, idVenta);
-
-                    sql1.setString(2, nomTF.getText());
-
-                    sql1.setString(3,
-                            metCbox.getSelectedItem().toString());
-
-                    if (metCbox.getSelectedIndex() == 0) {
-                        JOptionPane.showMessageDialog(
-                                null,
-                                "Seleccione un metodo..."
-                        );
-                        return;
-                    }
-
-                    if(subTF.getText().trim().isEmpty()
-                            || totalTF.getText().trim().isEmpty()){
-
-                        JOptionPane.showMessageDialog(
-                                null,
-                                "Calcule el subtotal y total primero"
-                        );
-                        return;
-                    }
-
-                    sql1.setDouble(4, Double.parseDouble(subTF.getText()));
-
-                    sql1.setDouble(5, Double.parseDouble(desTF.getText()));
-
-                    sql1.setDouble(6, Double.parseDouble(totalTF.getText()));
-
-                    sql1.setString(7, npeliTF.getText());
-
                     int cantidad = Integer.parseInt(canTF.getText());
-
+                    int stock = Integer.parseInt(stockTF.getText());
 
                     if (cantidad <= 0) {
-                        JOptionPane.showMessageDialog(
-                                null,
-                                "La cantidad debe ser mayor a 0"
-                        );
+                        JOptionPane.showMessageDialog(null, "La cantidad debe ser mayor a 0");
+                        return;
+                    }
+                    if (cantidad > stock) {
+                        JOptionPane.showMessageDialog(null, "Stock insuficiente. Disponible: " + stock);
                         return;
                     }
 
+                    double precio = Double.parseDouble(preTF.getText());
+                    double descProducto = desXproTF.getText().trim().isEmpty() ? 0 : Double.parseDouble(desXproTF.getText());
+                    if (descProducto < 0 || descProducto > 100) {
+                        JOptionPane.showMessageDialog(null, "El descuentoXproducto debe estar entre 0 y 100");
+                        return;
+                    }
 
-                    sql1.setInt(8, cantidad);
-                    sql1.setDouble(9,   Double.parseDouble(desXproTF.getText()));
-                    sql1.executeUpdate();
+                    double subtotalItem = precio * cantidad;
+                    subtotalItem = subtotalItem - (subtotalItem * descProducto / 100.0);
 
-//                    JOptionPane.showMessageDialog(
-//                            null,  "Factura modificada"
-//                    );
+                    carritoModel.setValueAt(String.valueOf(cantidad), fila, 2);
+                    carritoModel.setValueAt(String.format(Locale.US, "%.2f", precio), fila, 3);
+                    carritoModel.setValueAt(String.format(Locale.US, "%.2f", descProducto), fila, 4);
+                    carritoModel.setValueAt(String.format(Locale.US, "%.2f", subtotalItem), fila, 5);
+                    carritoModel.setValueAt(metCbox.getSelectedItem().toString(), fila, 6);
 
-                    cargarTable();
-                } catch (Exception ex) {
+                    double subtotalTotal = 0;
+                    for (int i = 0; i < carritoModel.getRowCount(); i++) {
+                        subtotalTotal += Double.parseDouble(carritoModel.getValueAt(i, 5).toString());
+                    }
+                    subTF.setText(String.format(Locale.US, "%.2f", subtotalTotal));
 
-                    ex.printStackTrace();
+                    double descuento = desTF.getText().trim().isEmpty() ? 0 : Double.parseDouble(desTF.getText());
+                    double totalFinal = subtotalTotal - (subtotalTotal * descuento / 100.0);
+                    totalTF.setText(String.format(Locale.US, "%.2f", totalFinal));
+
+                    codTF.setText("");
+                    canTF.setText("");
+                    npeliTF.setText("");
+                    stockTF.setText("");
+                    preTF.setText("");
+                    desXproTF.setText("");
+
+                } catch (NumberFormatException ex) {
                 }
             }
         });

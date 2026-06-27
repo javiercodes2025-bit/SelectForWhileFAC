@@ -9,7 +9,6 @@ public class FACTURACIONEMPL extends conectarCls{
     private JButton stockBTN;
     private JButton agreBTN;
     private JButton eliBTN;
-    private JButton calBTN;
 
     private JTextField desTF;
     private JTextField subTF;
@@ -196,77 +195,7 @@ public class FACTURACIONEMPL extends conectarCls{
             }
         });
 
-        calBTN.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
 
-                try {
-                    double precio = Double.parseDouble(preTF.getText());
-
-                    int cantidad = Integer.parseInt(canTF.getText());
-                    int stock = Integer.parseInt(stockTF.getText());
-
-                    if (cantidad <= 0) {
-                        JOptionPane.showMessageDialog(
-                                null,
-                                "La cantidad debe ser mayor a 0"
-                        );
-                        return;
-                    }
-
-                    if (cantidad > stock) {
-                        JOptionPane.showMessageDialog(
-                                null,
-                                "Stock insuficiente. Disponible: " + stock
-                        );
-                        return;
-                    }
-                    double descProducto = 0;
-                    double descuento = 0;
-
-                    if (!desTF.getText().trim().isEmpty()) {
-                        descuento = Double.parseDouble(desTF.getText());
-                        if (descuento < 0 || descuento > 100) {
-                            JOptionPane.showMessageDialog(
-                                    null,
-                                    "El descuento debe estar entre 0 y 100"
-                            );
-                            return;
-                        }
-                    }
-
-                    if (!desXproTF.getText().trim().isEmpty()) {
-                        descProducto = Double.parseDouble(desXproTF.getText());
-                        if (descProducto < 0 || descProducto > 100) {
-                            JOptionPane.showMessageDialog(
-                                    null,
-                                    "El descuentoXproducto debe estar entre 0 y 100"
-                            );
-                            return;
-                        }
-                    }
-
-                    double subtotal = precio * cantidad;
-                    subtotal = subtotal - (subtotal * descProducto / 100.0);
-
-                    double total = 0;
-                    total =   subtotal - (subtotal * descuento / 100.0);
-
-                    subTF.setText(String.valueOf(subtotal));
-                    totalTF.setText(String.valueOf(total));
-
-
-                } catch (Exception ex) {
-
-                    JOptionPane.showMessageDialog(
-                            null,
-                            "Ingrese un número valido... "
-                    );
-                    return;
-
-                }
-            }
-        });
         metCbox.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
