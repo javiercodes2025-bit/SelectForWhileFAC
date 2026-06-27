@@ -197,7 +197,7 @@ CREATE TABLE venta (
       cuenta VARCHAR(30) DEFAULT 'SINCUENTA',
     fecha_venta DATETIME DEFAULT CURRENT_TIMESTAMP,
 
-    metodo_pago VARCHAR(30),
+    metodo_pago VARCHAR(200),
 
     subtotal DECIMAL(10,2),
     descuento DECIMAL(10,2) DEFAULT 0,

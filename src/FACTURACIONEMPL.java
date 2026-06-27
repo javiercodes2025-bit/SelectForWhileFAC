@@ -45,18 +45,20 @@ public class FACTURACIONEMPL extends conectarCls{
         facDTJ.setColumnCount(0);
 
         String sqlSelect =
-                "SELECT v.id_venta, v.cuenta, v.NombrePro,  v.metodo_pago, pxv.cantidad, pxv.DescuentoXproducto, " +
-
-                        "v.descuento, " +
-                        "v.subtotal, " +
-                        "v.total, " +
-                        "v.fecha_venta " +
+                "SELECT v.id_venta, v.cuenta, v.NombrePro, v.metodo_pago, " +
+                        "SUM(pxv.cantidad) AS cantidad, " +
+                        "v.subtotal, v.descuento, v.total, v.fecha_venta " +
                         "FROM venta v " +
                         "INNER JOIN peliculaXventa pxv ON v.id_venta = pxv.fk_venta " +
-                        "WHERE v.habi = 1 " +
-                        "AND pxv.habi = 1";
+                        "WHERE v.habi = 1 AND pxv.habi = 1 " +
+                        "GROUP BY v.id_venta " +
+                        "ORDER BY v.fecha_venta DESC";
 
         try {
+            sql1 = BDD.prepareStatement(
+                "ALTER TABLE venta MODIFY COLUMN NombrePro VARCHAR(500)"
+            );
+            sql1.execute();
 
             sql1 = BDD.prepareStatement(sqlSelect);
             rs = sql1.executeQuery();
@@ -69,8 +71,6 @@ public class FACTURACIONEMPL extends conectarCls{
             facDTJ.addColumn("NOMBREPRO");
             facDTJ.addColumn("METODO_PAGO");
             facDTJ.addColumn("CANTIDAD");
-            facDTJ.addColumn("DescuentoXproducto");
-
             facDTJ.addColumn("SUBTOTAL");
             facDTJ.addColumn("DESCUENTO");
             facDTJ.addColumn("TOTAL");
