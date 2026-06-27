@@ -19,7 +19,6 @@ public class FACTURACION extends conectarCls{
     private JTextField canTF;
     private JTextField totalTF;
 
-    private JTable facTB;
     private JComboBox metCbox;
     private JPanel facJP;
     private JTextField cueTF;
@@ -42,67 +41,23 @@ public class FACTURACION extends conectarCls{
     ResultSet rs = null;
     PreparedStatement sql1;
 
-    DefaultTableModel facDTJ = new DefaultTableModel();
     DefaultTableModel carritoModel = new DefaultTableModel();
 
-    public void cargarTable() {
+    private void alterTableBD() {
         conecV();
         BDD = getCon();
-
-        facDTJ.setRowCount(0);
-        facDTJ.setColumnCount(0);
-
-        String sqlSelect =
-                "SELECT v.id_venta, v.cuenta, v.NombrePro, v.metodo_pago, " +
-                        "SUM(pxv.cantidad) AS cantidad, " +
-                        "v.subtotal, v.descuento, v.total, v.fecha_venta " +
-                        "FROM venta v " +
-                        "INNER JOIN peliculaXventa pxv ON v.id_venta = pxv.fk_venta " +
-                        "WHERE v.habi = 1 AND pxv.habi = 1 " +
-                        "GROUP BY v.id_venta " +
-                        "ORDER BY v.fecha_venta DESC";
-
         try {
             sql1 = BDD.prepareStatement(
                 "ALTER TABLE venta MODIFY COLUMN NombrePro VARCHAR(500)"
             );
             sql1.execute();
-
-            sql1 = BDD.prepareStatement(sqlSelect);
-            rs = sql1.executeQuery();
-
-            ResultSetMetaData comDATA = rs.getMetaData();
-            int comL = comDATA.getColumnCount();
-
-            facDTJ.addColumn("ID_VENTA");
-            facDTJ.addColumn("CUENTA");
-            facDTJ.addColumn("NOMBREPRO");
-            facDTJ.addColumn("METODO_PAGO");
-            facDTJ.addColumn("CANTIDAD");
-            facDTJ.addColumn("SUBTOTAL");
-            facDTJ.addColumn("DESCUENTO");
-            facDTJ.addColumn("TOTAL");
-            facDTJ.addColumn("FECHA_VENTA");
-
-            while (rs.next()) {
-
-                Object[] fila = new Object[comL];
-
-                for (int i = 0; i < comL; i++) {
-                    fila[i] = rs.getObject(i + 1);
-                }
-
-                facDTJ.addRow(fila);
-            }
-
         } catch (SQLException c) {
             c.printStackTrace();
         }
     }
 
     public FACTURACION() {
-        facTB.setModel(facDTJ);
-        cargarTable();
+        alterTableBD();
 
         carritoTable.setModel(carritoModel);
         carritoModel.addColumn("CÓDIGO");
@@ -469,8 +424,6 @@ public class FACTURACION extends conectarCls{
                     nomTF.setText("SINCUENTA");
                     desXproTF.setText("0");
 
-                    cargarTable();
-
                 } catch (SQLException ex) {
                     try { BDD.rollback(); } catch (SQLException rb) { rb.printStackTrace(); }
                     ex.printStackTrace();
@@ -555,43 +508,6 @@ public class FACTURACION extends conectarCls{
             }
         });
 
-//        eliBTN.addActionListener(new ActionListener() {
-//            @Override
-//            public void actionPerformed(ActionEvent e) {
-//
-//                conecV();
-//                BDD = getCon();
-//
-//                int fila = facTB.getSelectedRow();
-//                if (fila == -1) {
-//                    JOptionPane.showMessageDialog(null,
-//                            "Seleccione una Venta de la tabla");
-//                  /*  System.out.println("Seleccione una Venta de la tabla");*/
-//
-//                    return;
-//                }
-//
-//                int idVenta = Integer.parseInt(
-//                        facTB.getValueAt(fila, 0 ).toString()
-//                );
-//                String DesVenta =
-//                        "UPDATE venta v  INNER JOIN peliculaXventa pxv ON v.id_venta = pxv.fk_venta " +
-//                                "SET v.habi = 0, pxv.habi = 0 WHERE v.id_venta = ?";
-//                try {
-//
-//                    sql1 = BDD.prepareStatement(DesVenta);
-//                    sql1.setInt(1,idVenta);
-//                    sql1.executeUpdate();
-//                    cargarTable();
-//
-//                }catch (Exception  c){
-//                    System.out.println("Eliminar: Algo salio mal..."+c);
-//                    c.printStackTrace();
-//                }
-//            }
-//        });
-//
-
 
 
         empBTN.addActionListener(new ActionListener() {
@@ -636,6 +552,64 @@ public class FACTURACION extends conectarCls{
         });
 
 
+        HistorialfacBTN.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JDialog dialog = new JDialog(
+                    (java.awt.Window) SwingUtilities.getWindowAncestor(facJP),
+                    "Historial de Facturas",
+                    java.awt.Dialog.ModalityType.APPLICATION_MODAL
+                );
+
+                DefaultTableModel historialModel = new DefaultTableModel();
+                JTable historialTable = new JTable(historialModel);
+
+                conecV();
+                BDD = getCon();
+                try {
+                    sql1 = BDD.prepareStatement(
+                        "SELECT v.id_venta, v.cuenta, v.NombrePro, v.metodo_pago, " +
+                            "SUM(pxv.cantidad) AS cantidad, " +
+                            "v.subtotal, v.descuento, v.total, v.fecha_venta " +
+                            "FROM venta v " +
+                            "INNER JOIN peliculaXventa pxv ON v.id_venta = pxv.fk_venta " +
+                            "WHERE v.habi = 1 AND pxv.habi = 1 " +
+                            "GROUP BY v.id_venta " +
+                            "ORDER BY v.fecha_venta DESC"
+                    );
+                    rs = sql1.executeQuery();
+
+                    ResultSetMetaData meta = rs.getMetaData();
+                    int cols = meta.getColumnCount();
+
+                    historialModel.addColumn("ID_VENTA");
+                    historialModel.addColumn("CUENTA");
+                    historialModel.addColumn("NOMBREPRO");
+                    historialModel.addColumn("METODO_PAGO");
+                    historialModel.addColumn("CANTIDAD");
+                    historialModel.addColumn("SUBTOTAL");
+                    historialModel.addColumn("DESCUENTO");
+                    historialModel.addColumn("TOTAL");
+                    historialModel.addColumn("FECHA_VENTA");
+
+                    while (rs.next()) {
+                        Object[] fila = new Object[cols];
+                        for (int i = 0; i < cols; i++) {
+                            fila[i] = rs.getObject(i + 1);
+                        }
+                        historialModel.addRow(fila);
+                    }
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+
+                dialog.add(new JScrollPane(historialTable));
+                dialog.setSize(900, 400);
+                dialog.setLocationRelativeTo(null);
+                dialog.setVisible(true);
+            }
+        });
+
         atrasBTN.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -650,12 +624,11 @@ public class FACTURACION extends conectarCls{
     public void setVisible(boolean b){
         JFrame fac = new JFrame("FACTURACION");
         fac.setContentPane(this.facJP);
+        fac.setPreferredSize(new java.awt.Dimension(900, 850));
+         fac.setMinimumSize(new java.awt.Dimension(900, 850));
         fac.pack();
         fac.setVisible(b);
 
-
-
-        fac.setMinimumSize(new java.awt.Dimension(900, 700));
         fac.setLocationRelativeTo(null);
     }
 
