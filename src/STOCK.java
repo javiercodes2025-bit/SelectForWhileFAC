@@ -1,4 +1,5 @@
 import javax.swing.*;
+import javax.swing.text.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.*;
@@ -82,6 +83,33 @@ public class STOCK extends conectarCls {
         table1.setModel(stockDFB);
         cargarTable();
 
+        ((AbstractDocument) canTF.getDocument()).setDocumentFilter(new DocumentFilter() {
+            @Override public void insertString(FilterBypass fb, int off, String str, AttributeSet attr) throws BadLocationException {
+                if (str.matches("\\d*")) super.insertString(fb, off, str, attr);
+            }
+            @Override public void replace(FilterBypass fb, int off, int len, String str, AttributeSet attr) throws BadLocationException {
+                if (str.matches("\\d*")) super.replace(fb, off, len, str, attr);
+            }
+        });
+
+        ((AbstractDocument) anioTF.getDocument()).setDocumentFilter(new DocumentFilter() {
+            @Override public void insertString(FilterBypass fb, int off, String str, AttributeSet attr) throws BadLocationException {
+                if (str.matches("\\d*")) super.insertString(fb, off, str, attr);
+            }
+            @Override public void replace(FilterBypass fb, int off, int len, String str, AttributeSet attr) throws BadLocationException {
+                if (str.matches("\\d*")) super.replace(fb, off, len, str, attr);
+            }
+        });
+
+        ((AbstractDocument) decuXTF.getDocument()).setDocumentFilter(new DocumentFilter() {
+            @Override public void insertString(FilterBypass fb, int off, String str, AttributeSet attr) throws BadLocationException {
+                if (str.matches("\\d*")) super.insertString(fb, off, str, attr);
+            }
+            @Override public void replace(FilterBypass fb, int off, int len, String str, AttributeSet attr) throws BadLocationException {
+                if (str.matches("\\d*")) super.replace(fb, off, len, str, attr);
+            }
+        });
+
         selectBTN.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -131,10 +159,16 @@ public class STOCK extends conectarCls {
 
                 try {
 
+                    int anio = Integer.parseInt(anioTF.getText());
+                    if (anio < 1800 || anio > 2026) {
+                        JOptionPane.showMessageDialog(null, "El año debe estar entre 1800 y 2026");
+                        return;
+                    }
+
                     sqlSelect = BDD.prepareCall(SQLinsert);
 
                     sqlSelect.setString(1, tituloTF.getText());
-                    sqlSelect.setInt(2, Integer.parseInt(anioTF.getText()));
+                    sqlSelect.setInt(2, anio);
                     sqlSelect.setInt(3, Integer.parseInt(duracTF.getText()));
                     sqlSelect.setDouble(4, Double.parseDouble(precioTF.getText()));
 
@@ -176,12 +210,23 @@ public class STOCK extends conectarCls {
                 );
 
                 try {
+                    int anio = Integer.parseInt(anioTF.getText());
+                    if (anio < 1800 || anio > 2026) {
+                        JOptionPane.showMessageDialog(null, "El año debe estar entre 1800 y 2026");
+                        return;
+                    }
+                    int desc = Integer.parseInt(decuXTF.getText());
+                    if (desc < 0 || desc > 100) {
+                        JOptionPane.showMessageDialog(null, "El descuento debe estar entre 0 y 100");
+                        return;
+                    }
+
                     BDD.setAutoCommit(false);
 
                     String sqlPeli = "UPDATE pelicula SET titulo=?, anio=?, duracion=?, precio=?, desc_x_produc=? WHERE id_pelicula=?";
                     sqlSelect = BDD.prepareStatement(sqlPeli);
                     sqlSelect.setString(1, tituloTF.getText());
-                    sqlSelect.setInt(2, Integer.parseInt(anioTF.getText()));
+                    sqlSelect.setInt(2, anio);
                     sqlSelect.setInt(3, Integer.parseInt(duracTF.getText()));
                     sqlSelect.setDouble(4, Double.parseDouble(precioTF.getText()));
                     sqlSelect.setInt(5, Integer.parseInt(decuXTF.getText()));

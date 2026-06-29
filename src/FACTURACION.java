@@ -2,6 +2,7 @@ import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.text.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.*;
@@ -139,6 +140,24 @@ public class FACTURACION extends conectarCls{
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
+            }
+        });
+
+        ((AbstractDocument) canTF.getDocument()).setDocumentFilter(new DocumentFilter() {
+            @Override public void insertString(FilterBypass fb, int off, String str, AttributeSet attr) throws BadLocationException {
+                if (str.matches("\\d*")) super.insertString(fb, off, str, attr);
+            }
+            @Override public void replace(FilterBypass fb, int off, int len, String str, AttributeSet attr) throws BadLocationException {
+                if (str.matches("\\d*")) super.replace(fb, off, len, str, attr);
+            }
+        });
+
+        ((AbstractDocument) desXproTF.getDocument()).setDocumentFilter(new DocumentFilter() {
+            @Override public void insertString(FilterBypass fb, int off, String str, AttributeSet attr) throws BadLocationException {
+                if (str.matches("\\d*\\.?\\d*")) super.insertString(fb, off, str, attr);
+            }
+            @Override public void replace(FilterBypass fb, int off, int len, String str, AttributeSet attr) throws BadLocationException {
+                if (str.matches("\\d*\\.?\\d*")) super.replace(fb, off, len, str, attr);
             }
         });
 
